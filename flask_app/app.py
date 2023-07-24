@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import datetime
 import psycopg2 as db
+import psycopg2.extras
 import os
 
 app = Flask(__name__)
@@ -25,18 +26,38 @@ def login():
     username = data['username']
     password = data['password']
 
-    user = find_user_by_username(username)
+    # Database connection
+    conn = get_db_conn()
+    if conn is None:
+        return jsonify({"error": "Could not connect to the database."}), 500
+    cursor = conn.cursor(cursor_factory=db.extras.DictCursor)
 
-    # Check if the provided username exists and the password is correct
-    if user:
-        if user["password"] == password:
-            user['is_online'] = True
-            user['last_login'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            return jsonify({"message": "Login successful!"}), 200
+    try:
+        cursor.execute("SELECT * FROM users WHERE username = %s;", (username,))
+        user = cursor.fetchone()
+
+        # Check if the provided username exists and the password is correct
+        if user:
+            if user['password'] == password:
+                # Update user status and login time in online_users table
+                login_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                cursor.execute(
+                    "INSERT INTO online_users (user_id, username, ipaddress, login_time) VALUES (%s, %s, %s, %s);",
+                    (user['id'], user['username'], request.remote_addr, login_time))
+                conn.commit()
+
+                return jsonify({"message": "Login successful!"}), 200
+            else:
+                return jsonify({"error": "Invalid password. Please check your password."}), 401
         else:
-            return jsonify({"error": "Invalid password. Please check your password."}), 401
-    else:
-        return jsonify({"error": "Invalid credentials. Please check your username and password."}), 401
+            return jsonify({"error": "Invalid credentials. Please check your username and password."}), 401
+
+    except Exception as e:
+        print("Error during login:", e)
+        return jsonify({"error": "An error occurred during login."}), 500
+
+    finally:
+        conn.close()
 
 
 # Endpoint for logout
@@ -47,13 +68,32 @@ def logout():
         return jsonify({"error": "Invalid data. 'username' field is required."}), 400
 
     username = data['username']
-    user = find_user_by_username(username)
-    if user:
-        user['is_online'] = False
-        return jsonify({"message": "Logout successful!"}), 200
-    else:
-        return jsonify({"error": "User not found."}), 404
 
+    # Database connection
+    conn = get_db_conn()
+    if conn is None:
+        return jsonify({"error": "Could not connect to the database."}), 500
+    cursor = conn.cursor(cursor_factory=db.extras.DictCursor)
+
+    try:
+        cursor.execute("SELECT * FROM users WHERE username = %s;", (username,))
+        user = cursor.fetchone()
+
+        if user:
+            cursor.execute(
+                "DELETE FROM online_users WHERE username = %s;", (username,))
+            conn.commit()
+
+            return jsonify({"message": "User logged out successfully."}), 200
+        else:
+            return jsonify({"error": "No user with this username."}), 401
+
+    except Exception as e:
+        print("Error during login:", e)
+        return jsonify({"error": "An error occurred during login."}), 500
+
+    finally:
+        conn.close()
 
 # Endpoint for listing all users
 @app.route('/user/list', methods=['GET'])
@@ -144,31 +184,16 @@ def update_user(user_id):
 # Endpoint for getting online users
 @app.route('/onlineusers', methods=['GET'])
 def get_online_users():
-    online_users = []
-    for user in users:
-        if user['is_online']:
-            online_user_info = {
-                "username": user['username'],
-                "ipaddress": request.remote_addr,
-                "last_login": user['last_login']
-            }
-            online_users.append(online_user_info)
+    conn = get_db_conn()
+    cur = conn.cursor()
+
+    cur.execute('SELECT * FROM online_users')
+    online_users = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
     return jsonify(online_users)
-
-
-# Helper function to find a user by ID
-def find_user_by_id(user_id):
-    for user in users:
-        if user["id"] == user_id:
-            return user
-    return None
-
-
-def find_user_by_username(username):
-    for user in users:
-        if user["username"] == username:
-            return user
-    return None
 
 
 if __name__ == '__main__':
