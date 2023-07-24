@@ -1,35 +1,18 @@
 from flask import Flask, request, jsonify
 import datetime
+import psycopg2 as db
+import os
 
 app = Flask(__name__)
 
-# Sample data (You can replace this with a database in a real application)
-users = [
-    {
-        "id": 1,
-        "username": "user1",
-        "firstname": "John",
-        "middlename": "Doe",
-        "lastname": "Smith",
-        "birthdate": "1990-01-15",
-        "email": "user1@example.com",
-        "password": "user123",
-        "is_online": False,
-        "last_login": None
-    },
-    {
-        "id": 2,
-        "username": "user2",
-        "firstname": "Jane",
-        "middlename": "Lee",
-        "lastname": "Johnson",
-        "birthdate": "1985-05-20",
-        "email": "user2@example.com",
-        "password": "user456",
-        "is_online": False,
-        "last_login": None
-    }
-]
+
+def get_db_conn():
+    conn = db.connect(host="localhost",
+                      dbname="flask_db",
+                      user=os.environ['DB_USERNAME'],
+                      password=os.environ['DB_PASSWORD'],
+                      port="5432")
+    return conn
 
 
 # Endpoint for login
@@ -75,6 +58,15 @@ def logout():
 # Endpoint for listing all users
 @app.route('/user/list', methods=['GET'])
 def list_users():
+    conn = get_db_conn()
+    cur = conn.cursor()
+
+    cur.execute('SELECT * FROM users')
+    users = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
     return jsonify(users)
 
 
