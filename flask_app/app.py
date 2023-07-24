@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 import datetime
 import psycopg2 as db
 import psycopg2.extras
-import os
 
 app = Flask(__name__)
 
@@ -10,8 +9,8 @@ app = Flask(__name__)
 def get_db_conn():
     conn = db.connect(host="localhost",
                       dbname="flask_db",
-                      user=os.environ['DB_USERNAME'],
-                      password=os.environ['DB_PASSWORD'],
+                      user="flask",
+                      password="flask123",
                       port="5432")
     return conn
 
@@ -95,6 +94,7 @@ def logout():
     finally:
         conn.close()
 
+
 # Endpoint for listing all users
 @app.route('/user/list', methods=['GET'])
 def list_users():
@@ -155,30 +155,13 @@ def create_user():
 # Endpoint for deleting a user by ID
 @app.route('/user/delete/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
-    user = find_user_by_id(user_id)
-    if not user:
-        return jsonify({"error": "User not found."}), 404
-
-    users.remove(user)
-    return jsonify({"message": "User deleted successfully."}), 200
+    return 0
 
 
 # Endpoint for updating a user by ID
 @app.route('/user/update/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
-    user = find_user_by_id(user_id)
-    if not user:
-        return jsonify({"error": "User not found."}), 404
-
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "Invalid data. Please provide updated user information."}), 400
-
-    user['username'] = data.get('username', user['username'])
-    user['email'] = data.get('email', user['email'])
-    user['is_online'] = data.get('is_online', user['is_online'])
-
-    return jsonify(user), 200
+    return 0
 
 
 # Endpoint for getting online users

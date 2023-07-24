@@ -1,11 +1,10 @@
-import os
 import psycopg2
 
 conn = psycopg2.connect(
     host="localhost",
     dbname="flask_db",
-    user=os.environ['DB_USERNAME'],
-    password=os.environ['DB_PASSWORD'],
+    user="flask",
+    password="flask123",
     port="5432"
 )
 
