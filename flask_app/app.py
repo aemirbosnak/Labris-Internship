@@ -26,7 +26,7 @@ dictConfig({
         }
     },
     'root': {
-        'level': 'INFO',
+        'level': 'DEBUG',
         'handlers': ['console', 'file']
     }
 })
@@ -38,6 +38,8 @@ app = Flask(__name__)
 # TODO: use sqlalchemy
 
 # MAYBE TODO: change login system to flask sessions
+# MAYBE TODO: custom error messages for incorrect api request methods
+# MAYBE TODO: randomized user ids
 
 
 def get_db_conn():
@@ -75,16 +77,16 @@ def is_email_valid(email):
         return jsonify({"error": "An error occurred."}), 500
 
 
-def is_birthday_valid(birthday):
-    if not birthday:
+def is_birthdate_valid(birthdate):
+    if not birthdate:
         return True
 
     date_format_european = "%d-%m-%Y"
     date_format_american = "%m-%d-%Y"
 
     try:
-        res = bool(datetime.strptime(birthday, date_format_european)) or \
-              bool(datetime.strptime(birthday, date_format_american))
+        res = bool(datetime.strptime(birthdate, date_format_european)) or \
+              bool(datetime.strptime(birthdate, date_format_american))
         return res
 
     except Exception as e:
@@ -168,7 +170,7 @@ def logout():
 
     # Database connection
     conn = get_db_conn()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=db.extras.DictCursor)
 
     try:
         cursor.execute("SELECT * FROM users WHERE username = %s;", (username,))
@@ -228,7 +230,7 @@ def create_user():
     middlename = data.get('middlename', None)  # Optional field, set to empty string if not provided
     lastname = data['lastname']
 
-    if not is_birthday_valid(data['birthday']):
+    if not is_birthdate_valid(data.get('birthday', None)):
         app.logger.info("invalid birthdate entry at user registration")
         return jsonify({"error": "Enter a valid birthdate."}), 400
     birthdate = data.get('birthdate', None)  # Optional
@@ -338,7 +340,7 @@ def update_user(user_id):
         new_firstname = data.get('firstname', existing_firstname)
         new_lastname = data.get('lastname', existing_lastname)
 
-        if not is_birthday_valid(data.get('birthdate', existing_birthdate)):
+        if not is_birthdate_valid(data.get('birthdate', existing_birthdate)):
             app.logger.info("invalid birthdate entry at user update")
             return jsonify({"error": "Enter a valid birthdate."}), 400
         new_birthdate = data.get('birthdate', existing_birthdate)
