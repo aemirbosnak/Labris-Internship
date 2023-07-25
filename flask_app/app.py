@@ -47,6 +47,23 @@ def is_email_valid(email):
         return jsonify({"error": "An error occurred."}), 500
 
 
+def is_birthday_valid(birthday):
+    if not birthday:
+        return True
+
+    date_format_european = "%d-%m-%Y"
+    date_format_american = "%m-%d-%Y"
+
+    try:
+        res = bool(datetime.strptime(birthday, date_format_european)) or \
+              bool(datetime.strptime(birthday, date_format_american))
+        return res
+
+    except Exception as e:
+        print("Error - birthday validation:", e)
+        return jsonify({"error": "An error occurred."}), 500
+
+
 def encrypt_password(password):
     try:
         # passlib library hash function uses salt when hashing
@@ -64,6 +81,7 @@ def verify_password(input_password, stored_password):
     except Exception as e:
         print("Error - password verification:", e)
         return jsonify({"error": "An error occurred."}), 500
+
 
 # Endpoint for login
 @app.route('/login', methods=['POST'])
@@ -174,6 +192,9 @@ def create_user():
     firstname = data['firstname']
     middlename = data.get('middlename', None)  # Optional field, set to empty string if not provided
     lastname = data['lastname']
+
+    if not is_birthday_valid(data['birthday']):
+        return jsonify({"error": "Enter a valid birthdate."}), 400
     birthdate = data.get('birthdate', None)  # Optional
 
     if not is_email_valid(data['email']):
@@ -271,7 +292,13 @@ def update_user(user_id):
         new_username = data.get('username', existing_username)
         new_firstname = data.get('firstname', existing_firstname)
         new_lastname = data.get('lastname', existing_lastname)
+
+        if not is_birthday_valid(data.get('birthdate', existing_birthdate)):
+            return jsonify({"error": "Enter a valid birthdate."}), 400
         new_birthdate = data.get('birthdate', existing_birthdate)
+
+        if not is_email_valid(data.get('email', existing_email)):
+            return jsonify({"error": "Enter a valid email."}), 400
         new_email = data.get('email', existing_email)
 
         # Execute the update query
