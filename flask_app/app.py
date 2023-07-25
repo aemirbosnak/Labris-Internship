@@ -7,6 +7,9 @@ import re
 
 app = Flask(__name__)
 
+# TODO: implement activity logging
+# TODO: serve application with uwsgi and nginx
+# TODO: use sqlalchemy
 
 def get_db_conn():
     conn = db.connect(host="localhost",
@@ -24,6 +27,11 @@ def is_password_valid(password):
     # password complexity: at least one from [A-Za-z0-9] and min 8 characters
     pattern = r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z0-9]{8,}$'
     return bool(re.match(pattern, password))
+
+
+def is_email_valid(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
 
 
 def encrypt_password(password):
@@ -145,12 +153,14 @@ def create_user():
     middlename = data.get('middlename', None)  # Optional field, set to empty string if not provided
     lastname = data['lastname']
     birthdate = data.get('birthdate', None)  # Optional
+
+    if not is_email_valid(data['email']):
+        return jsonify({"error": "Enter a valid email address."}), 400
     email = data['email']
 
     if not is_password_valid(data['password']):
         return jsonify({"error": "Password should be longer than 8 characters and "
                                  "include at least one alphanumeric character."}), 400
-
     password = encrypt_password(data['password'])
 
     conn = get_db_conn()
