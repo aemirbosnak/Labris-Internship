@@ -33,13 +33,13 @@ dictConfig({
 
 app = Flask(__name__)
 
-# TODO: implement activity logging
 # TODO: serve application with uwsgi and nginx
 # TODO: use sqlalchemy
 
 # MAYBE TODO: change login system to flask sessions
 # MAYBE TODO: custom error messages for incorrect api request methods
 # MAYBE TODO: randomized user ids
+# MAYBE TODO: remove _internal logging messages
 
 
 def get_db_conn():
