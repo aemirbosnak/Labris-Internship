@@ -21,7 +21,7 @@ cursor.execute('CREATE TABLE users ('
                'last_name varchar (50) NOT NULL,'
                'birthdate date,'
                'email varchar (100) UNIQUE,'
-               'password varchar (50) NOT NULL);'
+               'password varchar (100) NOT NULL);'
                )
 
 cursor.execute('CREATE TABLE online_users ('

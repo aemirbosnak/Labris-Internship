@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import datetime
 import psycopg2 as db
 import psycopg2.extras
+from passlib.hash import sha256_crypt
 
 app = Flask(__name__)
 
@@ -38,7 +39,7 @@ def login():
 
         # Check if the provided username exists and the password is correct
         if user:
-            if user['password'] == password:
+            if sha256_crypt.verify(password, user['password']):
                 # Update user status and login time in online_users table
                 login_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 cursor.execute(
@@ -130,7 +131,9 @@ def create_user():
     lastname = data['lastname']
     birthdate = data.get('birthdate', None)  # Optional
     email = data['email']
-    password = data['password']
+
+    # passlib library hash function uses salt when hashing
+    hashedPassword = sha256_crypt.hash(data['password'])
 
     conn = get_db_conn()
     cur = conn.cursor()
@@ -149,7 +152,7 @@ def create_user():
         else:
             cur.execute('INSERT INTO users (username, first_name, middle_name, last_name, birthdate, email, password) '
                         'VALUES (%s, %s, %s, %s, %s, %s, %s)',
-                        (username, firstname, middlename, lastname, birthdate, email, password))
+                        (username, firstname, middlename, lastname, birthdate, email, hashedPassword))
             conn.commit()
             return jsonify({"message": "User registered successfully."}), 200
 
