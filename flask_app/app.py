@@ -3,6 +3,7 @@ import datetime
 import psycopg2 as db
 import psycopg2.extras
 from passlib.hash import sha256_crypt
+import re
 
 app = Flask(__name__)
 
@@ -19,6 +20,21 @@ def get_db_conn():
     return conn
 
 
+def is_password_valid(password):
+    # password complexity: at least one from [A-Za-z0-9] and min 8 characters
+    pattern = r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z0-9]{8,}$'
+    return bool(re.match(pattern, password))
+
+
+def encrypt_password(password):
+    # passlib library hash function uses salt when hashing
+    return sha256_crypt.hash(password)
+
+
+def verify_password(input_password, stored_password):
+    return sha256_crypt.verify(input_password, stored_password)
+
+
 # Endpoint for login
 @app.route('/login', methods=['POST'])
 def login():
@@ -27,7 +43,6 @@ def login():
         return jsonify({"error": "Invalid data. 'username' and 'password' fields are required."}), 400
 
     username = data['username']
-    password = data['password']
 
     # Database connection
     conn = get_db_conn()
@@ -39,7 +54,7 @@ def login():
 
         # Check if the provided username exists and the password is correct
         if user:
-            if sha256_crypt.verify(password, user['password']):
+            if verify_password(data['password'], user['password']):
                 # Update user status and login time in online_users table
                 login_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 cursor.execute(
@@ -132,8 +147,11 @@ def create_user():
     birthdate = data.get('birthdate', None)  # Optional
     email = data['email']
 
-    # passlib library hash function uses salt when hashing
-    hashedPassword = sha256_crypt.hash(data['password'])
+    if not is_password_valid(data['password']):
+        return jsonify({"error": "Password should be longer than 8 characters and "
+                                 "include at least one alphanumeric character."}), 400
+
+    password = encrypt_password(data['password'])
 
     conn = get_db_conn()
     cur = conn.cursor()
@@ -152,7 +170,7 @@ def create_user():
         else:
             cur.execute('INSERT INTO users (username, first_name, middle_name, last_name, birthdate, email, password) '
                         'VALUES (%s, %s, %s, %s, %s, %s, %s)',
-                        (username, firstname, middlename, lastname, birthdate, email, hashedPassword))
+                        (username, firstname, middlename, lastname, birthdate, email, password))
             conn.commit()
             return jsonify({"message": "User registered successfully."}), 200
 
