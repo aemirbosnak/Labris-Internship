@@ -4,12 +4,40 @@ import psycopg2 as db
 import psycopg2.extras
 from passlib.hash import sha256_crypt
 import re
+from logging.config import dictConfig
+
+# Logging configuration and formatting (needs to be done before app initialization)
+dictConfig({
+    'version': 1,
+    'formatters': {
+        'default': {
+            'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default'
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'flask.log',
+            'formatter': 'default'
+        }
+    },
+    'root': {
+        'level': 'INFO',
+        'handlers': ['console', 'file']
+    }
+})
 
 app = Flask(__name__)
 
 # TODO: implement activity logging
 # TODO: serve application with uwsgi and nginx
 # TODO: use sqlalchemy
+
+# MAYBE TODO: change login system to flask sessions
 
 
 def get_db_conn():
@@ -33,7 +61,7 @@ def is_password_valid(password):
         return bool(re.match(pattern, password))
 
     except Exception as e:
-        print("Error - password validation:", e)
+        app.logger.error("password validation: %s", e)
         return jsonify({"error": "An error occurred."}), 500
 
 
@@ -43,7 +71,7 @@ def is_email_valid(email):
         return bool(re.match(pattern, email))
 
     except Exception as e:
-        print("Error - email validation:", e)
+        app.logger.error("email validation: %s", e)
         return jsonify({"error": "An error occurred."}), 500
 
 
@@ -60,7 +88,7 @@ def is_birthday_valid(birthday):
         return res
 
     except Exception as e:
-        print("Error - birthday validation:", e)
+        app.logger.error("birthdate validation: %s", e)
         return jsonify({"error": "An error occurred."}), 500
 
 
@@ -70,7 +98,7 @@ def encrypt_password(password):
         return sha256_crypt.hash(password)
 
     except Exception as e:
-        print("Error - password encryption:", e)
+        app.logger.error("password encryption: %s", e)
         return jsonify({"error": "An error occurred."}), 500
 
 
@@ -79,7 +107,7 @@ def verify_password(input_password, stored_password):
         return sha256_crypt.verify(input_password, stored_password)
 
     except Exception as e:
-        print("Error - password verification:", e)
+        app.logger.error("password verification: %s", e)
         return jsonify({"error": "An error occurred."}), 500
 
 
@@ -88,6 +116,7 @@ def verify_password(input_password, stored_password):
 def login():
     data = request.get_json()
     if not data or 'username' not in data or 'password' not in data:
+        app.logger.info("invalid json data entry at login")
         return jsonify({"error": "Invalid data. 'username' and 'password' fields are required."}), 400
 
     username = data['username']
@@ -110,14 +139,17 @@ def login():
                     (user['id'], user['username'], request.remote_addr, login_time))
                 conn.commit()
 
+                app.logger.info("Login successful for user_id %s", user['id'])
                 return jsonify({"message": "Login successful!"}), 200
             else:
+                app.logger.info("invalid password at login, user id: %s", user['id'])
                 return jsonify({"error": "Invalid password. Please check your password."}), 401
         else:
+            app.logger.info("invalid username at login")
             return jsonify({"error": "Invalid credentials. Please check your username and password."}), 401
 
     except Exception as e:
-        print("Error during login:", e)
+        app.logger.error("login: %s", e)
         return jsonify({"error": "An error occurred during login."}), 500
 
     finally:
@@ -129,6 +161,7 @@ def login():
 def logout():
     data = request.get_json()
     if not data or 'username' not in data:
+        app.logger.info("invalid json data entry at logout")
         return jsonify({"error": "Invalid data. 'username' field is required."}), 400
 
     username = data['username']
@@ -145,13 +178,14 @@ def logout():
             cursor.execute(
                 "DELETE FROM online_users WHERE username = %s;", (username,))
             conn.commit()
-
+            app.logger.info("Logout successful for user_id %s", user['id'])
             return jsonify({"message": "User logged out successfully."}), 200
         else:
+            app.logger.info("invalid username at logout")
             return jsonify({"error": "No user with this username."}), 401
 
     except Exception as e:
-        print("Error during login:", e)
+        app.logger.error("logout: %s", e)
         return jsonify({"error": "An error occurred during login."}), 500
 
     finally:
@@ -172,7 +206,7 @@ def list_users():
         return jsonify(users), 200
 
     except Exception as e:
-        print("Error listing users:", e)
+        app.logger.error("list_users: %s", e)
         return jsonify({"error": "An error occurred."}), 500
 
     finally:
@@ -185,6 +219,7 @@ def create_user():
     data = request.get_json()
     if not data or 'username' not in data or 'firstname' not in data \
             or 'lastname' not in data or 'email' not in data or 'password' not in data:
+        app.logger.info("invalid json data entry at user registration")
         return jsonify({"error": "Invalid data. 'username', 'firstname', 'lastname', 'birthdate', "
                                  "'email', and 'password' fields are required."}), 400
 
@@ -194,14 +229,17 @@ def create_user():
     lastname = data['lastname']
 
     if not is_birthday_valid(data['birthday']):
+        app.logger.info("invalid birthdate entry at user registration")
         return jsonify({"error": "Enter a valid birthdate."}), 400
     birthdate = data.get('birthdate', None)  # Optional
 
     if not is_email_valid(data['email']):
+        app.logger.info("invalid email entry at user registration")
         return jsonify({"error": "Enter a valid email address."}), 400
     email = data['email']
 
     if not is_password_valid(data['password']):
+        app.logger.info("invalid password entry at user registration")
         return jsonify({"error": "Password should be longer than 8 characters and "
                                  "include at least one alphanumeric character."}), 400
     password = encrypt_password(data['password'])
@@ -217,18 +255,21 @@ def create_user():
         accountExistWithSameUsername = cur.fetchone()
 
         if accountExistWithSameEmail:
+            app.logger.info("invalid email entry at user registration - already taken")
             return jsonify({"error": "This email is already registered."}), 400
         elif accountExistWithSameUsername:
+            app.logger.info("invalid username entry at user registration - already taken")
             return jsonify({"error": "This username is already registered."}), 400
         else:
             cur.execute('INSERT INTO users (username, first_name, middle_name, last_name, birthdate, email, password) '
                         'VALUES (%s, %s, %s, %s, %s, %s, %s)',
                         (username, firstname, middlename, lastname, birthdate, email, password))
             conn.commit()
+            app.logger.info("Registration successful")
             return jsonify({"message": "User registered successfully."}), 200
 
     except Exception as e:
-        print("Error creating user:", e)
+        app.logger.error("register: %s", e)
         return jsonify({"error": "An error occurred while creating user."}), 500
 
     finally:
@@ -249,12 +290,14 @@ def delete_user(user_id):
         if user:
             cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
             conn.commit()
+            app.logger.info("Deletion successful for user_id %s", user_id)
             return jsonify({"message": f"User with id {user_id} deleted successfully."}), 200
         else:
+            app.logger.info("invaid user id at user deletion")
             return jsonify({"error": f"No user with id {user_id} found."}), 400
 
     except Exception as e:
-        print("Error deleting user:", e)
+        app.logger.error("delete: %s", e)
         return jsonify({"error": "An error occurred while deleting user."}), 500
 
     finally:
@@ -267,6 +310,7 @@ def delete_user(user_id):
 def update_user(user_id):
     data = request.get_json()
     if not data or not any(field in data for field in ['username', 'firstname', 'lastname', 'birthdate', 'email']):
+        app.logger.info("invaid data entry at user update")
         return jsonify({"error": "Invalid data. At least one of 'username', "
                         "'firstname', 'lastname', 'birthdate', 'email' fields are required."}), 400
 
@@ -279,6 +323,7 @@ def update_user(user_id):
         user = cur.fetchone()
 
         if not user:
+            app.logger.info("invalid user id at user update")
             return jsonify({"error": f"No user with id {user_id} found."}), 400
 
         # Extract the existing data from the user row
@@ -294,10 +339,12 @@ def update_user(user_id):
         new_lastname = data.get('lastname', existing_lastname)
 
         if not is_birthday_valid(data.get('birthdate', existing_birthdate)):
+            app.logger.info("invalid birthdate entry at user update")
             return jsonify({"error": "Enter a valid birthdate."}), 400
         new_birthdate = data.get('birthdate', existing_birthdate)
 
         if not is_email_valid(data.get('email', existing_email)):
+            app.logger.info("invalid email entry at user update")
             return jsonify({"error": "Enter a valid email."}), 400
         new_email = data.get('email', existing_email)
 
@@ -307,11 +354,11 @@ def update_user(user_id):
             (new_username, new_firstname, new_lastname, new_birthdate, new_email, user_id)
         )
         conn.commit()
-
+        app.logger.info("Update successful for user_id %s", user_id)
         return jsonify({"message": f"User with id {user_id} updated successfully."}), 200
 
     except Exception as e:
-        print("Error updating user:", e)
+        app.logger.error("update_user %s", e)
         return jsonify({"error": "An error occurred during user update."}), 500
 
     finally:
@@ -331,7 +378,7 @@ def get_online_users():
         return jsonify(online_users)
 
     except Exception as e:
-        print("Error listing online users:", e)
+        app.logger.error("get_online_users: %s", e)
         return jsonify({"error": "An error occurred."}), 500
 
     finally:
