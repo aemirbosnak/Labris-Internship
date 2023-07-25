@@ -1,4 +1,5 @@
 import psycopg2
+from passlib.hash import sha256_crypt
 
 conn = psycopg2.connect(
     host="localhost",
@@ -37,8 +38,8 @@ cursor.execute('INSERT INTO users (username, first_name, last_name, email, passw
                  'Robert',
                  'Oppenheimer',
                  'oppie@town.com',
-                 'BuildItFast')
-                )
+                 sha256_crypt.hash("oppie_Built_a_Bomb"))
+               )
 
 cursor.execute('INSERT INTO users (username, first_name, last_name, email, password)'
                'VALUES (%s, %s, %s, %s, %s)',
@@ -46,8 +47,8 @@ cursor.execute('INSERT INTO users (username, first_name, last_name, email, passw
                  'Albert',
                  'Einstein',
                  'albert@town.com',
-                 'MyHat')
-                )
+                 sha256_crypt.hash("WhereDidMyHatGo"))
+               )
 
 conn.commit()
 

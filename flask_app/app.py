@@ -11,6 +11,7 @@ app = Flask(__name__)
 # TODO: serve application with uwsgi and nginx
 # TODO: use sqlalchemy
 
+
 def get_db_conn():
     conn = db.connect(host="localhost",
                       dbname="flask_db",
