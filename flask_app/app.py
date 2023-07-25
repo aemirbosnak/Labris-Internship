@@ -13,36 +13,57 @@ app = Flask(__name__)
 
 
 def get_db_conn():
-    conn = db.connect(host="localhost",
-                      dbname="flask_db",
-                      user="flask",
-                      password="flask123",
-                      port="5432")
-    if conn is None:
-        return jsonify({"error": "Could not connect to the database."}), 500
+    try:
+        conn = db.connect(host="localhost",
+                          dbname="flask_db",
+                          user="flask",
+                          password="flask123",
+                          port="5432")
+        return conn
 
-    return conn
+    except Exception as e:
+        print("Error - database connection:", e)
+        return jsonify({"error": "Could not connect to the database."}), 500
 
 
 def is_password_valid(password):
-    # password complexity: at least one from [A-Za-z0-9] and min 8 characters
-    pattern = r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z0-9]{8,}$'
-    return bool(re.match(pattern, password))
+    try:
+        # password complexity: at least one from [A-Za-z0-9] and min 8 characters
+        pattern = r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z0-9]{8,}$'
+        return bool(re.match(pattern, password))
+
+    except Exception as e:
+        print("Error - password validation:", e)
+        return jsonify({"error": "An error occurred."}), 500
 
 
 def is_email_valid(email):
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return bool(re.match(pattern, email))
+    try:
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return bool(re.match(pattern, email))
+
+    except Exception as e:
+        print("Error - email validation:", e)
+        return jsonify({"error": "An error occurred."}), 500
 
 
 def encrypt_password(password):
-    # passlib library hash function uses salt when hashing
-    return sha256_crypt.hash(password)
+    try:
+        # passlib library hash function uses salt when hashing
+        return sha256_crypt.hash(password)
+
+    except Exception as e:
+        print("Error - password encryption:", e)
+        return jsonify({"error": "An error occurred."}), 500
 
 
 def verify_password(input_password, stored_password):
-    return sha256_crypt.verify(input_password, stored_password)
+    try:
+        return sha256_crypt.verify(input_password, stored_password)
 
+    except Exception as e:
+        print("Error - password verification:", e)
+        return jsonify({"error": "An error occurred."}), 500
 
 # Endpoint for login
 @app.route('/login', methods=['POST'])
