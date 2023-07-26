@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import datetime
+from datetime import datetime, timedelta
 from passlib.hash import sha256_crypt
 import re
 from logging.config import dictConfig
@@ -30,10 +30,6 @@ dictConfig({
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://flask:flask123@localhost/flask_db'
 db = SQLAlchemy(app)
-
-
-# MAYBE TODO: change login system to flask sessions
-# MAYBE TODO: user timeout
 
 
 class User(db.Model):
@@ -80,7 +76,7 @@ def login():
         if user:
             if verify_password(data['password'], user.password):
                 # Update user status and login time in online_users table
-                login_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                login_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 online_user = OnlineUser(id=user.id, username=user.username,
                                          ipaddress=request.remote_addr, login_time=login_time)
                 db.session.add(online_user)
@@ -366,6 +362,28 @@ def verify_password(input_password, stored_password):
     except Exception as e:
         app.logger.error("password verification: %s", e)
         return jsonify({"error": "An error occurred."}), 500
+
+
+def check_logout_users():
+    try:
+        online_users = OnlineUser.query.all()
+        current_time = datetime.now()
+
+        for user in online_users:
+            login_time = user.login_time
+            duration = current_time - login_time
+
+            # Set the maximum allowed online time here (e.g., 30 minutes)
+            max_online_time = timedelta(minutes=30)
+
+            if duration > max_online_time:
+                db.session.delete(user)
+                db.session.commit()
+                app.logger.info("User with id %s logged out due to session timeout.", user.id)
+
+    except SQLAlchemyError as e:
+        app.logger.error("check_logout_users: %s", e)
+        db.session.rollback()
 
 
 if __name__ == '__main__':
