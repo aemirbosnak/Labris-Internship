@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
 import datetime
-import psycopg2 as db
-import psycopg2.extras
 from passlib.hash import sha256_crypt
 import re
 from logging.config import dictConfig
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError
 
 # Logging configuration and formatting (needs to be done before app initialization)
 dictConfig({
@@ -15,10 +15,6 @@ dictConfig({
         }
     },
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'default'
-        },
         'file': {
             'class': 'logging.FileHandler',
             'filename': 'flask.log',
@@ -27,33 +23,292 @@ dictConfig({
     },
     'root': {
         'level': 'DEBUG',
-        'handlers': ['console', 'file']
+        'handlers': ['file']
     }
 })
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://flask:flask123@localhost/flask_db'
+db = SQLAlchemy(app)
 
-# TODO: serve application with uwsgi and nginx
-# TODO: use sqlalchemy
 
 # MAYBE TODO: change login system to flask sessions
-# MAYBE TODO: custom error messages for incorrect api request methods
-# MAYBE TODO: randomized user ids
-# MAYBE TODO: remove _internal logging messages
+# MAYBE TODO: user timeout
 
 
-def get_db_conn():
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)  # SQLAlchemy automatically makes the first int PK autoincrement
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    first_name = db.Column(db.String(50), nullable=False)
+    middle_name = db.Column(db.String(50))
+    last_name = db.Column(db.String(50), nullable=False)
+    birthdate = db.Column(db.Date)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(256), nullable=False)
+
+    online_user = db.relationship('OnlineUser', primaryjoin='User.id==OnlineUser.id')
+
+
+class OnlineUser(db.Model):
+    __tablename__ = 'online_users'
+    id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    username = db.Column(db.String(50))
+    ipaddress = db.Column(db.String(15), nullable=False)
+    login_time = db.Column(db.DateTime, nullable=False)
+
+
+with app.app_context():
+    db.create_all()
+    db.session.commit()
+
+
+# Endpoint for login
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    if not data or 'username' not in data or 'password' not in data:
+        app.logger.info("invalid json data entry at login")
+        return jsonify({"error": "Invalid data. 'username' and 'password' fields are required."}), 400
+
+    username = data['username']
+
     try:
-        conn = db.connect(host="localhost",
-                          dbname="flask_db",
-                          user="flask",
-                          password="flask123",
-                          port="5432")
-        return conn
+        user = User.query.filter_by(username=username).first()
+
+        # Check if the provided username exists and the password is correct
+        if user:
+            if verify_password(data['password'], user.password):
+                # Update user status and login time in online_users table
+                login_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                online_user = OnlineUser(id=user.id, username=user.username,
+                                         ipaddress=request.remote_addr, login_time=login_time)
+                db.session.add(online_user)
+                db.session.commit()
+
+                app.logger.info("Login successful for user_id %s", user.id)
+                return jsonify({"message": "Login successful!"}), 200
+            else:
+                app.logger.info("invalid password at login, user id: %s", user.id)
+                return jsonify({"error": "Invalid password. Please check your password."}), 401
+        else:
+            app.logger.info("invalid username at login")
+            return jsonify({"error": "Invalid credentials. Please check your username and password."}), 401
+
+    except SQLAlchemyError as e:
+        app.logger.error("login: %s", e)
+        db.session.rollback()  # Rollback changes in case of error
+        return jsonify({"error": "An error occurred during login."}), 500
+
+
+# Endpoint for logout
+@app.route('/logout', methods=['POST'])
+def logout():
+    data = request.get_json()
+    if not data or 'username' not in data:
+        app.logger.info("invalid json data entry at logout")
+        return jsonify({"error": "Invalid data. 'username' field is required."}), 400
+
+    username = data['username']
+
+    try:
+
+        online_user = OnlineUser.query.filter_by(username=username).first()
+
+        if online_user:
+            db.session.delete(online_user)
+            db.session.commit()
+
+            app.logger.info("Logout successful for user_id %s", online_user.id)
+            return jsonify({"message": "User logged out successfully."}), 200
+        else:
+            app.logger.info("invalid username at logout")
+            return jsonify({"error": "No user with this username."}), 401
+
+    except SQLAlchemyError as e:
+        app.logger.error("logout: %s", e)
+        return jsonify({"error": "An error occurred during login."}), 500
+
+
+# Endpoint for listing all users
+@app.route('/user/list', methods=['GET'])
+def list_users():
+    try:
+        users = User.query.all()
+        # Convert the users to a list of dictionaries to jsonify
+        users_data = [
+            {
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'middle_name': user.middle_name,
+                'last_name': user.last_name,
+                'birthdate': str(user.birthdate)  # Convert date to string for JSON serialization
+            }
+            for user in users
+        ]
+        app.logger.info("list_users successful")
+        return jsonify(users_data), 200
+
+    except SQLAlchemyError as e:
+        app.logger.error("list_users: %s", e)
+        return jsonify({"error": "An error occurred."}), 500
+
+
+# Endpoint for creating a new user
+@app.route('/user/create', methods=['POST'])
+def create_user():
+    data = request.get_json()
+    if not data or 'username' not in data or 'firstname' not in data \
+            or 'lastname' not in data or 'email' not in data or 'password' not in data:
+        app.logger.info("invalid json data entry at user registration")
+        return jsonify({"error": "Invalid data. 'username', 'firstname', 'lastname', 'birthdate', "
+                                 "'email', and 'password' fields are required."}), 400
+
+    username = data['username']
+    firstname = data['firstname']
+    middlename = data.get('middlename', None)  # Optional field, set to empty string if not provided
+    lastname = data['lastname']
+
+    if not is_birthdate_valid(data.get('birthday', None)):
+        app.logger.info("invalid birthdate entry at user registration")
+        return jsonify({"error": "Enter a valid birthdate."}), 400
+    birthdate = data.get('birthdate', None)  # Optional
+
+    if not is_email_valid(data['email']):
+        app.logger.info("invalid email entry at user registration")
+        return jsonify({"error": "Enter a valid email address."}), 400
+    email = data['email']
+
+    if not is_password_valid(data['password']):
+        app.logger.info("invalid password entry at user registration")
+        return jsonify({"error": "Password should be longer than 8 characters and "
+                                 "include at least one alphanumeric character."}), 400
+    password = encrypt_password(data['password'])
+
+    try:
+        # Check if the email or username is already registered
+        existing_user_email = User.query.filter_by(email=email).first()
+        existing_user_username = User.query.filter_by(username=username).first()
+
+        if existing_user_email:
+            app.logger.info("invalid email entry at user registration - already taken")
+            return jsonify({"error": "This email is already registered."}), 400
+        elif existing_user_username:
+            app.logger.info("invalid username entry at user registration - already taken")
+            return jsonify({"error": "This username is already registered."}), 400
+        else:
+            new_user = User(
+                username=username,
+                first_name=firstname,
+                middle_name=middlename,
+                last_name=lastname,
+                birthdate=birthdate,
+                email=email,
+                password=password
+            )
+            db.session.add(new_user)
+            db.session.commit()
+
+            app.logger.info("Registration successful")
+            return jsonify({"message": "User registered successfully."}), 200
+
+    except SQLAlchemyError as e:
+        app.logger.error("create_user: %s", e)
+        return jsonify({"error": "An error occurred while creating user."}), 500
+
+
+# Endpoint for deleting a user by ID
+@app.route('/user/delete/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    try:
+        user = User.query.filter_by(id=user_id).first()
+        is_online = OnlineUser.query.filter_by(id=user_id).first()
+
+        if is_online:
+            app.logger.warning("Trying to delete online user with id %s", user_id)
+            return jsonify({"error": "The user is online, try when user is offline."}), 400
+
+        if user:
+            db.session.delete(user)
+            db.session.commit()
+
+            app.logger.info("Deletion successful for user_id %s", user_id)
+            return jsonify({"message": f"User with id {user_id} deleted successfully."}), 200
+        else:
+            app.logger.info("invalid user id at user deletion")
+            return jsonify({"error": f"No user with id {user_id} found."}), 400
 
     except Exception as e:
-        print("Error - database connection:", e)
-        return jsonify({"error": "Could not connect to the database."}), 500
+        app.logger.error("delete: %s", e)
+        return jsonify({"error": "An error occurred while deleting user."}), 500
+
+
+# Endpoint for updating a user by ID
+@app.route('/user/update/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    data = request.get_json()
+    if not data or not any(field in data for field in ['username', 'firstname', 'lastname', 'birthdate', 'email']):
+        app.logger.info("invalid data entry at user update")
+        return jsonify({"error": "Invalid data. At least one of 'username', "
+                        "'firstname', 'lastname', 'birthdate', 'email' fields are required."}), 400
+
+    try:
+        user = User.query.filter_by(id=user_id).first()
+        is_online = OnlineUser.query.filter_by(id=user_id).first()
+
+        if not user:
+            app.logger.info("invalid user id at user update")
+            return jsonify({"error": f"No user with id {user_id} found."}), 400
+
+        if is_online:
+            app.logger.warning("Trying to update online user with id %s", user_id)
+            return jsonify({"error": "The user is online, try when user is offline."}), 400
+
+        # TODO: check if new username or email is not taken
+
+        # Update the user data with the new values if provided
+        if 'username' in data:
+            user.username = data['username']
+        if 'firstname' in data:
+            user.first_name = data['firstname']
+        if 'lastname' in data:
+            user.last_name = data['lastname']
+        if 'birthdate' in data and is_birthdate_valid(data['birthdate']):
+            user.birthdate = data['birthdate']
+        if 'email' in data and is_email_valid(data['email']):
+            user.email = data['email']
+
+        # Commit the changes
+        db.session.commit()
+
+        app.logger.info("Update successful for user_id %s", user_id)
+        return jsonify({"message": f"User with id {user_id} updated successfully."}), 200
+
+    except Exception as e:
+        app.logger.error("update_user %s", e)
+        return jsonify({"error": "An error occurred during user update."}), 500
+
+
+# Endpoint for getting online users
+@app.route('/onlineusers', methods=['GET'])
+def get_online_users():
+    try:
+        online_users = OnlineUser.query.all()
+        users_data = [
+            {
+                'username': user.username,
+                'ipaddress': user.ipaddress,
+                'login_time': user.login_time,
+            }
+            for user in online_users
+        ]
+        app.logger.info("get_online_users successful")
+        return jsonify(users_data)
+
+    except SQLAlchemyError as e:
+        app.logger.error("get_online_users: %s", e)
+        return jsonify({"error": "An error occurred."}), 500
 
 
 def is_password_valid(password):
@@ -111,281 +366,6 @@ def verify_password(input_password, stored_password):
     except Exception as e:
         app.logger.error("password verification: %s", e)
         return jsonify({"error": "An error occurred."}), 500
-
-
-# Endpoint for login
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    if not data or 'username' not in data or 'password' not in data:
-        app.logger.info("invalid json data entry at login")
-        return jsonify({"error": "Invalid data. 'username' and 'password' fields are required."}), 400
-
-    username = data['username']
-
-    # Database connection
-    conn = get_db_conn()
-    cursor = conn.cursor(cursor_factory=db.extras.DictCursor)
-
-    try:
-        cursor.execute("SELECT * FROM users WHERE username = %s;", (username,))
-        user = cursor.fetchone()
-
-        # Check if the provided username exists and the password is correct
-        if user:
-            if verify_password(data['password'], user['password']):
-                # Update user status and login time in online_users table
-                login_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                cursor.execute(
-                    "INSERT INTO online_users (user_id, username, ipaddress, login_time) VALUES (%s, %s, %s, %s);",
-                    (user['id'], user['username'], request.remote_addr, login_time))
-                conn.commit()
-
-                app.logger.info("Login successful for user_id %s", user['id'])
-                return jsonify({"message": "Login successful!"}), 200
-            else:
-                app.logger.info("invalid password at login, user id: %s", user['id'])
-                return jsonify({"error": "Invalid password. Please check your password."}), 401
-        else:
-            app.logger.info("invalid username at login")
-            return jsonify({"error": "Invalid credentials. Please check your username and password."}), 401
-
-    except Exception as e:
-        app.logger.error("login: %s", e)
-        return jsonify({"error": "An error occurred during login."}), 500
-
-    finally:
-        conn.close()
-
-
-# Endpoint for logout
-@app.route('/logout', methods=['POST'])
-def logout():
-    data = request.get_json()
-    if not data or 'username' not in data:
-        app.logger.info("invalid json data entry at logout")
-        return jsonify({"error": "Invalid data. 'username' field is required."}), 400
-
-    username = data['username']
-
-    # Database connection
-    conn = get_db_conn()
-    cursor = conn.cursor(cursor_factory=db.extras.DictCursor)
-
-    try:
-        cursor.execute("SELECT * FROM users WHERE username = %s;", (username,))
-        user = cursor.fetchone()
-
-        if user:
-            cursor.execute(
-                "DELETE FROM online_users WHERE username = %s;", (username,))
-            conn.commit()
-            app.logger.info("Logout successful for user_id %s", user['id'])
-            return jsonify({"message": "User logged out successfully."}), 200
-        else:
-            app.logger.info("invalid username at logout")
-            return jsonify({"error": "No user with this username."}), 401
-
-    except Exception as e:
-        app.logger.error("logout: %s", e)
-        return jsonify({"error": "An error occurred during login."}), 500
-
-    finally:
-        conn.close()
-
-
-# Endpoint for listing all users
-@app.route('/user/list', methods=['GET'])
-def list_users():
-    conn = get_db_conn()
-    cur = conn.cursor()
-
-    try:
-        cur.execute('SELECT * FROM users')
-        users = cur.fetchall()
-
-        cur.close()
-        return jsonify(users), 200
-
-    except Exception as e:
-        app.logger.error("list_users: %s", e)
-        return jsonify({"error": "An error occurred."}), 500
-
-    finally:
-        conn.close()
-
-
-# Endpoint for creating a new user
-@app.route('/user/create', methods=['POST'])
-def create_user():
-    data = request.get_json()
-    if not data or 'username' not in data or 'firstname' not in data \
-            or 'lastname' not in data or 'email' not in data or 'password' not in data:
-        app.logger.info("invalid json data entry at user registration")
-        return jsonify({"error": "Invalid data. 'username', 'firstname', 'lastname', 'birthdate', "
-                                 "'email', and 'password' fields are required."}), 400
-
-    username = data['username']
-    firstname = data['firstname']
-    middlename = data.get('middlename', None)  # Optional field, set to empty string if not provided
-    lastname = data['lastname']
-
-    if not is_birthdate_valid(data.get('birthday', None)):
-        app.logger.info("invalid birthdate entry at user registration")
-        return jsonify({"error": "Enter a valid birthdate."}), 400
-    birthdate = data.get('birthdate', None)  # Optional
-
-    if not is_email_valid(data['email']):
-        app.logger.info("invalid email entry at user registration")
-        return jsonify({"error": "Enter a valid email address."}), 400
-    email = data['email']
-
-    if not is_password_valid(data['password']):
-        app.logger.info("invalid password entry at user registration")
-        return jsonify({"error": "Password should be longer than 8 characters and "
-                                 "include at least one alphanumeric character."}), 400
-    password = encrypt_password(data['password'])
-
-    conn = get_db_conn()
-    cur = conn.cursor()
-
-    try:
-        cur.execute('SELECT * FROM users WHERE email = %s ', (email,))
-        accountExistWithSameEmail = cur.fetchone()
-
-        cur.execute('SELECT * FROM users WHERE username = %s ', (username,))
-        accountExistWithSameUsername = cur.fetchone()
-
-        if accountExistWithSameEmail:
-            app.logger.info("invalid email entry at user registration - already taken")
-            return jsonify({"error": "This email is already registered."}), 400
-        elif accountExistWithSameUsername:
-            app.logger.info("invalid username entry at user registration - already taken")
-            return jsonify({"error": "This username is already registered."}), 400
-        else:
-            cur.execute('INSERT INTO users (username, first_name, middle_name, last_name, birthdate, email, password) '
-                        'VALUES (%s, %s, %s, %s, %s, %s, %s)',
-                        (username, firstname, middlename, lastname, birthdate, email, password))
-            conn.commit()
-            app.logger.info("Registration successful")
-            return jsonify({"message": "User registered successfully."}), 200
-
-    except Exception as e:
-        app.logger.error("register: %s", e)
-        return jsonify({"error": "An error occurred while creating user."}), 500
-
-    finally:
-        cur.close()
-        conn.close()
-
-
-# Endpoint for deleting a user by ID
-@app.route('/user/delete/<int:user_id>', methods=['DELETE'])
-def delete_user(user_id):
-    conn = get_db_conn()
-    cur = conn.cursor()
-
-    try:
-        cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
-        user = cur.fetchone()
-
-        if user:
-            cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
-            conn.commit()
-            app.logger.info("Deletion successful for user_id %s", user_id)
-            return jsonify({"message": f"User with id {user_id} deleted successfully."}), 200
-        else:
-            app.logger.info("invaid user id at user deletion")
-            return jsonify({"error": f"No user with id {user_id} found."}), 400
-
-    except Exception as e:
-        app.logger.error("delete: %s", e)
-        return jsonify({"error": "An error occurred while deleting user."}), 500
-
-    finally:
-        cur.close()
-        conn.close()
-
-
-# Endpoint for updating a user by ID
-@app.route('/user/update/<int:user_id>', methods=['PUT'])
-def update_user(user_id):
-    data = request.get_json()
-    if not data or not any(field in data for field in ['username', 'firstname', 'lastname', 'birthdate', 'email']):
-        app.logger.info("invaid data entry at user update")
-        return jsonify({"error": "Invalid data. At least one of 'username', "
-                        "'firstname', 'lastname', 'birthdate', 'email' fields are required."}), 400
-
-    conn = get_db_conn()
-    cur = conn.cursor(cursor_factory=db.extras.DictCursor)
-
-    try:
-        # Check if the user with the given user_id exists
-        cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
-        user = cur.fetchone()
-
-        if not user:
-            app.logger.info("invalid user id at user update")
-            return jsonify({"error": f"No user with id {user_id} found."}), 400
-
-        # Extract the existing data from the user row
-        existing_username = user['username']
-        existing_firstname = user['first_name']
-        existing_lastname = user['last_name']
-        existing_birthdate = user['birthdate']
-        existing_email = user['email']
-
-        # Update the user data with the new values if provided
-        new_username = data.get('username', existing_username)
-        new_firstname = data.get('firstname', existing_firstname)
-        new_lastname = data.get('lastname', existing_lastname)
-
-        if not is_birthdate_valid(data.get('birthdate', existing_birthdate)):
-            app.logger.info("invalid birthdate entry at user update")
-            return jsonify({"error": "Enter a valid birthdate."}), 400
-        new_birthdate = data.get('birthdate', existing_birthdate)
-
-        if not is_email_valid(data.get('email', existing_email)):
-            app.logger.info("invalid email entry at user update")
-            return jsonify({"error": "Enter a valid email."}), 400
-        new_email = data.get('email', existing_email)
-
-        # Execute the update query
-        cur.execute(
-            "UPDATE users SET username=%s, first_name=%s, last_name=%s, birthdate=%s, email=%s WHERE id=%s;",
-            (new_username, new_firstname, new_lastname, new_birthdate, new_email, user_id)
-        )
-        conn.commit()
-        app.logger.info("Update successful for user_id %s", user_id)
-        return jsonify({"message": f"User with id {user_id} updated successfully."}), 200
-
-    except Exception as e:
-        app.logger.error("update_user %s", e)
-        return jsonify({"error": "An error occurred during user update."}), 500
-
-    finally:
-        cur.close()
-        conn.close()
-
-
-# Endpoint for getting online users
-@app.route('/onlineusers', methods=['GET'])
-def get_online_users():
-    conn = get_db_conn()
-    cur = conn.cursor()
-
-    try:
-        cur.execute('SELECT * FROM online_users')
-        online_users = cur.fetchall()
-        return jsonify(online_users)
-
-    except Exception as e:
-        app.logger.error("get_online_users: %s", e)
-        return jsonify({"error": "An error occurred."}), 500
-
-    finally:
-        cur.close()
-        conn.close()
 
 
 if __name__ == '__main__':
