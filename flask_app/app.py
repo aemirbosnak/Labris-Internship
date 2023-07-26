@@ -1,8 +1,8 @@
 from flask import request, jsonify, json
 from datetime import datetime, timedelta
 from passlib.hash import sha256_crypt
-import re
 from sqlalchemy.exc import SQLAlchemyError
+import re
 
 from logging_config import configure_logging
 from database.models import User, OnlineUser
