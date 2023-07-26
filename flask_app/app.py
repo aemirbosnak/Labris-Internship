@@ -1,66 +1,15 @@
-from flask import Flask, request, jsonify, json
+from flask import request, jsonify, json
 from datetime import datetime, timedelta
 from passlib.hash import sha256_crypt
 import re
-from logging.config import dictConfig
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
-from collections import OrderedDict
 
-# Logging configuration and formatting (needs to be done before app initialization)
-dictConfig({
-    'version': 1,
-    'formatters': {
-        'default': {
-            'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-        }
-    },
-    'handlers': {
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': 'flask.log',
-            'formatter': 'default'
-        }
-    },
-    'root': {
-        'level': 'DEBUG',
-        'handlers': ['file']
-    }
-})
+from logging_config import configure_logging
+from database.models import User, OnlineUser
+from database.config import app, db
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://flask:flask123@localhost/flask_db'
-db = SQLAlchemy(app)
-
-# TODO: json output formatting
-# TODO: put database classes and database starter to separate module
-
-
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)  # SQLAlchemy automatically makes the first int PK autoincrement
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    first_name = db.Column(db.String(50), nullable=False)
-    middle_name = db.Column(db.String(50))
-    last_name = db.Column(db.String(50), nullable=False)
-    birthdate = db.Column(db.Date)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(256), nullable=False)
-
-    online_user = db.relationship('OnlineUser', primaryjoin='User.id==OnlineUser.id')
-
-
-class OnlineUser(db.Model):
-    __tablename__ = 'online_users'
-    id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    username = db.Column(db.String(50))
-    ipaddress = db.Column(db.String(15), nullable=False)
-    login_time = db.Column(db.DateTime, nullable=False)
-
-
-with app.app_context():
-    db.create_all()
-    db.session.commit()
+# Load logging configuration
+configure_logging()
 
 
 # Endpoint for login
