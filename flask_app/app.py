@@ -1,10 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, json
 from datetime import datetime, timedelta
 from passlib.hash import sha256_crypt
 import re
 from logging.config import dictConfig
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
+from collections import OrderedDict
 
 # Logging configuration and formatting (needs to be done before app initialization)
 dictConfig({
@@ -30,6 +31,9 @@ dictConfig({
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://flask:flask123@localhost/flask_db'
 db = SQLAlchemy(app)
+
+# TODO: json output formatting
+# TODO: put database classes and database starter to separate module
 
 
 class User(db.Model):
@@ -124,31 +128,6 @@ def logout():
     except SQLAlchemyError as e:
         app.logger.error("logout: %s", e)
         return jsonify({"error": "An error occurred during login."}), 500
-
-
-# Endpoint for listing all users
-@app.route('/user/list', methods=['GET'])
-def list_users():
-    try:
-        users = User.query.all()
-        # Convert the users to a list of dictionaries to jsonify
-        users_data = [
-            {
-                'username': user.username,
-                'email': user.email,
-                'first_name': user.first_name,
-                'middle_name': user.middle_name,
-                'last_name': user.last_name,
-                'birthdate': str(user.birthdate)  # Convert date to string for JSON serialization
-            }
-            for user in users
-        ]
-        app.logger.info("list_users successful")
-        return jsonify(users_data), 200
-
-    except SQLAlchemyError as e:
-        app.logger.error("list_users: %s", e)
-        return jsonify({"error": "An error occurred."}), 500
 
 
 # Endpoint for creating a new user
@@ -286,21 +265,73 @@ def update_user(user_id):
         return jsonify({"error": "An error occurred during user update."}), 500
 
 
+# Endpoint for listing all users
+@app.route('/user/list', methods=['GET'])
+def list_users():
+    try:
+        users = User.query.order_by(User.id).all()
+
+        # Convert the users to a list of dictionaries
+        users_data = [
+            {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'middle_name': user.middle_name,
+                'last_name': user.last_name,
+                'birthdate': str(user.birthdate),  # Convert date to string for JSON serialization
+            }
+            for user in users
+        ]
+
+        # Use json.dumps with sort_keys=False to preserve order
+        json_response = json.dumps(users_data, indent=2, sort_keys=False)
+
+        # Set the Content-Type header to 'application/json'
+        response = app.response_class(
+            response=json_response,
+            status=200,
+            mimetype='application/json'
+        )
+
+        app.logger.info("list_users successful")
+        return response
+
+    except SQLAlchemyError as e:
+        app.logger.error("list_users: %s", e)
+        return jsonify({"error": "An error occurred."}), 500
+
+
 # Endpoint for getting online users
 @app.route('/onlineusers', methods=['GET'])
 def get_online_users():
     try:
         online_users = OnlineUser.query.all()
+
+        # Convert the users to a list of dictionaries
         users_data = [
             {
+                'id': user.id,
                 'username': user.username,
                 'ipaddress': user.ipaddress,
                 'login_time': user.login_time,
             }
             for user in online_users
         ]
+
+        # Use json.dumps with sort_keys=False to preserve order
+        json_response = json.dumps(users_data, indent=2, sort_keys=False)
+
+        # Set the Content-Type header to 'application/json'
+        response = app.response_class(
+            response=json_response,
+            status=200,
+            mimetype='application/json'
+        )
+
         app.logger.info("get_online_users successful")
-        return jsonify(users_data)
+        return response
 
     except SQLAlchemyError as e:
         app.logger.error("get_online_users: %s", e)
