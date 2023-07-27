@@ -1,0 +1,305 @@
+{
+	"info": {
+		"_postman_id": "9a8fe234-bb5d-43cf-be93-ebcfa0cf14b2",
+		"name": "Todoist Negative Scenarios",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create project - get project id",
+			"_postman_id": "dc740f4b-0a65-4211-9793-2a8aba9ff12e",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Task Tests\",\n    \"color\": \"sky_blue\",\n    \"is_favorite\": false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{todoist_url}}/projects"
+			},
+			"response": []
+		},
+		{
+			"name": "Create project - empty body",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "86daa36b-2f23-4643-9d98-2a911f1e830e",
+						"exec": [
+							"pm.test(\"Empty request body. Status code is 400 Bad Request Error.\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"_postman_id": "5cd052e7-3b7d-4101-b17d-87b793604a8f",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{todoist_url}}/projects"
+			},
+			"response": []
+		},
+		{
+			"name": "Create project - no project name",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "86daa36b-2f23-4643-9d98-2a911f1e830e",
+						"exec": [
+							"pm.test(\"No name provided. Status code is 400 Bad Request Error.\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"_postman_id": "70f2bc65-a25b-4980-9805-6ad271c071a6",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"\",\n    \"color\": \"green\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{todoist_url}}/projects"
+			},
+			"response": []
+		},
+		{
+			"name": "Update project - incorrect boolean value",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4cbae40a-90d8-41fe-bd50-bea4218dd421",
+						"exec": [
+							"pm.test(\"Incorrect boolean value. Status code is 400 Bad Request Error.\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"_postman_id": "ded9b3ee-1599-48f5-9a6e-493d9b2a2006",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"color\": \"yellow\",\n    \"is_favorite\": yes\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{todoist_url}}/projects/{{project_id}}"
+			},
+			"response": []
+		},
+		{
+			"name": "Update project - no project id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4cbae40a-90d8-41fe-bd50-bea4218dd421",
+						"exec": [
+							"pm.test(\"No project id provided. Status code is 400 Bad Request\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"_postman_id": "5e493fb3-3a0d-45c5-bf59-2d6a048241f1",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"color\": \"yellow\",\n    \"is_favorite\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{todoist_url}}/projects/{{project_id}}"
+			},
+			"response": []
+		},
+		{
+			"name": "Create task - incorrect section id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "ba5795b1-ec6c-44e0-a99a-e433ebb05480",
+						"exec": [
+							"pm.test(\"Incorrect or empty project/section id. Status code is 400 Bad Request\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"_postman_id": "0a3ed1ac-1841-457b-802b-43bbec530842",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"content\": \"learn to write api tests\",\n    \"project_id\": {{project_id}},\n    \"section_id\": {{todoist_section_id}},\n    \"due_string\": \"Today at 17.00\",\n    \"priority\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{todoist_url}}/tasks"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete task - no task id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "68bd0fe7-b4e4-498e-b98f-83c0321dacc7",
+						"exec": [
+							"pm.test(\"No task id provided. Status code is 405 Method Not Allowed.\", function () {",
+							"    pm.response.to.have.status(405);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"_postman_id": "63f7b088-11ef-4b58-a4cb-437e6bccfcc5",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": "{{todoist_url}}/tasks/"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete task - incorrect task id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b94867ec-99d2-43d3-af90-8cc5175fb654",
+						"exec": [
+							"pm.test(\"Incorrect task id provided. Status code is 400 Bad Request\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"_postman_id": "bf000336-f200-4f0a-811b-aecd25e47ab8",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": "{{todoist_url}}/tasks/{{task_id_2}}"
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "{{api_token}}"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "11e1a3f1-cef3-4a42-a6e0-30f122c9a8a8",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "de6b347b-0e22-4f65-872e-7919100cec12",
+				"type": "text/javascript",
+				"exec": [
+					"// Check that the response time is within an acceptable range.",
+					"pm.test(\"Response time is less than 1000ms\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+					"});"
+				]
+			}
+		}
+	]
+}
