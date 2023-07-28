@@ -1027,7 +1027,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "f9608bbf-c09e-49e0-a1f1-67b14495bd26",
+						"id": "d26a70c9-5cf1-4266-b939-1a7e0fa1b9fb",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1037,7 +1037,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "6ad0aea2-6b71-4f61-b1a2-ccf46d9aacd2",
+						"id": "7f962419-adc9-4307-9f69-abdc1af7e3d6",
 						"type": "text/javascript",
 						"exec": [
 							"// Test to check the response body structure for Comment object",
@@ -1072,8 +1072,8 @@
 							"                \"type\": \"object\",",
 							"                \"properties\": {",
 							"                    \"id\": { \"type\": \"string\" },",
-							"                    \"task_id\": { \"type\": [\"object\", \"string\"] },",
-							"                    \"project_id\": { \"type\": [\"object\", \"string\"] },",
+							"                    \"task_id\": { \"type\": [\"null\", \"string\"] },",
+							"                    \"project_id\": { \"type\": [\"null\", \"string\"] },",
 							"                    \"posted_at\": { \"type\": \"string\" },",
 							"                    \"content\": { \"type\": \"string\" },",
 							"                    \"attachment\": { \"type\": [\"null\", \"object\"] }",
