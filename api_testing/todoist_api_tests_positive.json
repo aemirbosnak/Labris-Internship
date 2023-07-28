@@ -195,7 +195,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "c6ad0982-c55b-4b85-af71-c912ef6fb4af",
+						"id": "522a4d27-005f-417b-96c3-016cb35172d7",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -205,10 +205,10 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "070b38b6-d2a0-468a-81a8-9c58a564c559",
+						"id": "b0d2d915-7067-4cd5-9391-98710d3ae23a",
 						"type": "text/javascript",
 						"exec": [
-							"const schema = {",
+							"const projectSchema = {",
 							"    \"type\": \"object\",",
 							"    \"properties\": {",
 							"        \"id\": { \"type\": \"string\" },",
@@ -232,13 +232,10 @@
 							"    pm.test(\"Response body structure is valid\", function () {",
 							"        var responseJSON = pm.response.json();",
 							"",
-							"        // Define the JSON schema for the expected response structure of a single project object",
-							"        const singleProjectSchema = schema;",
-							"",
 							"        // Define the JSON schema for the expected response structure of an array of project objects",
 							"        const arrayProjectSchema = {",
 							"            \"type\": \"array\",",
-							"            \"items\": singleProjectSchema",
+							"            \"items\": projectSchema",
 							"        };",
 							"",
 							"        // If the response is an array, check the entire array against the schema",
@@ -249,7 +246,7 @@
 							"        // If the response is a single project object, check its structure and types directly",
 							"        else if (typeof responseJSON === 'object') {",
 							"            // Check if the response has a valid JSON body",
-							"            pm.expect(responseJSON).to.be.jsonSchema(singleProjectSchema);",
+							"            pm.expect(responseJSON).to.be.jsonSchema(projectSchema);",
 							"        }",
 							"        // If the response is neither an object nor an array, the test will fail",
 							"        else {",
