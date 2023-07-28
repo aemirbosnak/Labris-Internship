@@ -1021,7 +1021,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "7b086822-aa64-4556-8810-7e9126b5dac6",
+						"id": "04ce5f2d-99f5-4f89-b4ce-47d8a3ee5826",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1031,11 +1031,11 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "175a8e4f-39d8-47bb-bbeb-cf0c13a41708",
+						"id": "6743e475-0ab7-4a8c-be0d-ae4539ac989e",
 						"type": "text/javascript",
 						"exec": [
 							"// Common schema for Comment and Project object",
-							"const schema = {",
+							"const commentSchema = {",
 							"    \"type\": \"object\",",
 							"    \"properties\": {",
 							"        \"id\": { \"type\": \"string\" },",
@@ -1053,13 +1053,10 @@
 							"    pm.test(\"Response body structure is valid\", function () {",
 							"        var responseJSON = pm.response.json();",
 							"",
-							"        // Define the JSON schema for the expected response structure of a single comment object",
-							"        const singleCommentSchema = schema;",
-							"",
 							"        // Define the JSON schema for the expected response structure of an array of comment objects",
 							"        const arrayCommentSchema = {",
 							"            \"type\": \"array\",",
-							"            \"items\": schema",
+							"            \"items\": commentSchema",
 							"        };",
 							"",
 							"        // If the response is an array, check the entire array against the schema",
@@ -1070,7 +1067,7 @@
 							"        // If the response is a single comment object, check its structure and types directly",
 							"        else if (typeof responseJSON === 'object') {",
 							"            // Check if the response has a valid JSON body",
-							"            pm.expect(responseJSON).to.be.jsonSchema(singleCommentSchema);",
+							"            pm.expect(responseJSON).to.be.jsonSchema(commentSchema);",
 							"        }",
 							"        // If the response is neither an object nor an array, the test will fail",
 							"        else {",
