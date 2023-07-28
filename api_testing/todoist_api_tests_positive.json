@@ -1027,7 +1027,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "06cf6f2b-d784-4b29-8e25-ac77a78a7179",
+						"id": "63758e26-5031-4055-a9c6-10959e9cec9f",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1037,7 +1037,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "54168551-0d7b-47e6-90f0-3e777c5285ce",
+						"id": "b639a5dc-d85d-4c6e-8f34-599e6ce77d55",
 						"type": "text/javascript",
 						"exec": [
 							"// Test to check the response body structure for Comment object",
@@ -1076,7 +1076,7 @@
 							"            pm.expect(responseJSON.id).to.be.a('string');",
 							"",
 							"            console.log(typeof responseJSON.task_id);",
-							"            pm.expect(responseJSON.task_id).to.be.a('string');",
+							"            pm.expect(responseJSON.task_id).to.be.oneOf(['string']);",
 							"",
 							"            pm.expect(responseJSON.project_id).to.be.oneOf([null, 'string']);",
 							"            pm.expect(responseJSON.posted_at).to.be.a('string');",
