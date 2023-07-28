@@ -762,7 +762,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "73ff2a2e-cb75-475c-b110-72f5b99c636e",
+						"id": "4e0c2e57-da91-4b74-8833-4ff7ef5e0069",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -772,7 +772,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "7692d43c-2cad-4b9b-b98b-8ec36b17d73f",
+						"id": "f3f1c066-114a-4431-b96b-f52dbea0cf10",
 						"type": "text/javascript",
 						"exec": [
 							"// Common schema for non-empty Task object",
@@ -791,14 +791,14 @@
 							"        },",
 							"        \"parent_id\": { \"type\": [\"null\", \"string\"] },",
 							"        \"order\": { \"type\": \"number\" },",
-							"        \"priority\": { \"type\": \"string\" },",
+							"        \"priority\": { \"type\": \"number\" },",
 							"        \"due\": { \"type\": \"object\" },",
 							"        \"url\": { \"type\": \"string\" },",
 							"        \"comment_count\": { \"type\": \"number\" },",
 							"        \"created_at\": { \"type\": \"string\" },",
 							"        \"creator_id\": { \"type\": \"string\" },",
-							"        \"assignee_id\": { \"type\": \"string\" },",
-							"        \"assigner_id\": { \"type\": \"string\" },",
+							"        \"assignee_id\": { \"type\": [\"null\", \"string\"] },",
+							"        \"assigner_id\": { \"type\": [\"null\", \"string\"] },",
 							"        \"duration\": { \"type\": \"object\" }",
 							"    },",
 							"    \"required\": [\"id\", \"project_id\", \"section_id\", \"content\", \"is_completed\"]",
