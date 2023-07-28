@@ -1391,17 +1391,5 @@
 				]
 			}
 		}
-	],
-	"variable": [
-		{
-			"id": "ad5322c2-cf80-49a7-9562-9cfce850bffb",
-			"key": "project_id",
-			"value": ""
-		},
-		{
-			"id": "19c692b6-a821-4303-942f-a3a9a65fa3fb",
-			"key": "section_id",
-			"value": ""
-		}
 	]
 }
