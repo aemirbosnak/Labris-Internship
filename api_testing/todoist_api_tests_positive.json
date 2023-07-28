@@ -1359,7 +1359,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "11e6a37b-8ca3-44c7-ac59-6dada171d5b5",
+				"id": "e6fbe3c7-21d0-48be-8e95-cf0d9ca083c2",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -1369,12 +1369,12 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "7e942d22-a639-479c-9383-bce4cdf27c47",
+				"id": "5c68be51-5e3f-427c-9d33-48c3befe5ff1",
 				"type": "text/javascript",
 				"exec": [
 					"// Test for response status code of 200 or 204",
 					"pm.test(\"Response status code is 200 or 204\", function () {",
-					"    pm.response.to.have.status.oneOf([200, 204]);",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
 					"});",
 					"",
 					"// Check that the response time is within an acceptable range.",
