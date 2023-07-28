@@ -1394,13 +1394,18 @@
 	],
 	"variable": [
 		{
-			"id": "eba86524-70a6-41fd-85a7-58f79d070bd3",
+			"id": "7626a8b5-d167-4789-b611-60bbab2bcc99",
 			"key": "project_id",
 			"value": ""
 		},
 		{
-			"id": "a32104b5-9218-4db0-aa6d-fa68688c88cf",
+			"id": "3fabe830-4af7-45b9-9a43-fc566d737eb8",
 			"key": "section_id",
+			"value": ""
+		},
+		{
+			"id": "9a95960e-b20d-4653-bf19-e1cc04e86dfa",
+			"key": "task_id",
 			"value": ""
 		}
 	]
