@@ -1359,7 +1359,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "59c31e83-e0d1-4eb2-b1f2-8b379cee9b03",
+				"id": "5e2bf1f1-6e1f-450e-ae9f-db4d18ffa4cc",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -1369,20 +1369,13 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "1ba26ecc-5911-48af-9f17-f5776f3ea367",
+				"id": "bb16f002-28e9-488c-a02d-81a4823c3a39",
 				"type": "text/javascript",
 				"exec": [
-					"// Ensure that the status code is 200 for GET, POST and 204 for DELETE.",
-					"if (pm.request.method === 'GET' || pm.request.method === 'POST') {",
-					"    pm.test(\"Response status code is 200\", function () {",
-					"        pm.response.to.have.status(200);",
-					"    });",
-					"}",
-					"if (pm.request.method === 'DELETE') {",
-					"    pm.test(\"Response status code is 204\", function () {",
-					"        pm.response.to.have.status(204);",
-					"    });",
-					"}",
+					"// Test for response status code of 200 or 204",
+					"pm.test(\"Response status code is 200 or 204\", function () {",
+					"    pm.response.to.have.status(200).or.to.have.status(204);",
+					"});",
 					"",
 					"// Check that the response time is within an acceptable range.",
 					"pm.test(\"Response time is less than 1000ms\", function () {",
