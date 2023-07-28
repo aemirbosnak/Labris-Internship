@@ -1360,18 +1360,17 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "2b0395e0-7b19-431e-8291-d3063475781e",
+				"id": "f13fadef-85ab-4fab-a663-4494cc111ec5",
 				"type": "text/javascript",
 				"exec": [
-					"// Load the tv4 library",
-					"const tv4 = require('tv4');"
+					""
 				]
 			}
 		},
 		{
 			"listen": "test",
 			"script": {
-				"id": "6d2c9f67-f801-41c3-83d0-141a8a6c4317",
+				"id": "176c8dbf-0f2e-47c8-8401-bc8ccdc3b6fb",
 				"type": "text/javascript",
 				"exec": [
 					"// Test for response status code of 200 or 204",
