@@ -1018,7 +1018,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "04ce5f2d-99f5-4f89-b4ce-47d8a3ee5826",
+						"id": "934162b3-c43f-4751-b022-7b191f5d83d5",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1028,10 +1028,10 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "6743e475-0ab7-4a8c-be0d-ae4539ac989e",
+						"id": "44df7e3c-2ae1-481d-9409-b112af209df6",
 						"type": "text/javascript",
 						"exec": [
-							"// Common schema for Comment and Project object",
+							"// Common schema for Comment object",
 							"const commentSchema = {",
 							"    \"type\": \"object\",",
 							"    \"properties\": {",
