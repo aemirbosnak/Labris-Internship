@@ -1027,7 +1027,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "d6f74536-8b5e-4470-9e11-07f4bfc58776",
+						"id": "06cf6f2b-d784-4b29-8e25-ac77a78a7179",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1037,7 +1037,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "d5e033da-beda-4730-bec7-08cb3e31f1e6",
+						"id": "54168551-0d7b-47e6-90f0-3e777c5285ce",
 						"type": "text/javascript",
 						"exec": [
 							"// Test to check the response body structure for Comment object",
@@ -1076,7 +1076,7 @@
 							"            pm.expect(responseJSON.id).to.be.a('string');",
 							"",
 							"            console.log(typeof responseJSON.task_id);",
-							"            pm.expect(responseJSON.task_id).to.be.oneOf([null, 'string']);",
+							"            pm.expect(responseJSON.task_id).to.be.a('string');",
 							"",
 							"            pm.expect(responseJSON.project_id).to.be.oneOf([null, 'string']);",
 							"            pm.expect(responseJSON.posted_at).to.be.a('string');",
@@ -1394,12 +1394,12 @@
 	],
 	"variable": [
 		{
-			"id": "7f12d940-3af9-4e65-95dc-9164763f1d66",
+			"id": "ad5322c2-cf80-49a7-9562-9cfce850bffb",
 			"key": "project_id",
 			"value": ""
 		},
 		{
-			"id": "ab3361c8-d822-4c4b-8481-a8b068bf561c",
+			"id": "19c692b6-a821-4303-942f-a3a9a65fa3fb",
 			"key": "section_id",
 			"value": ""
 		}
