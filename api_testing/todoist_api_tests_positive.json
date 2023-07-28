@@ -1027,7 +1027,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "6b02e7e1-8ca8-4599-98e9-bfb5966e6da9",
+						"id": "f9608bbf-c09e-49e0-a1f1-67b14495bd26",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1037,7 +1037,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "291eaa73-8cb9-43ce-9573-570842a5d904",
+						"id": "6ad0aea2-6b71-4f61-b1a2-ccf46d9aacd2",
 						"type": "text/javascript",
 						"exec": [
 							"// Test to check the response body structure for Comment object",
@@ -1082,7 +1082,7 @@
 							"            };",
 							"",
 							"            // Check if the response has a valid JSON body",
-							"            pm.expect(response.json()).to.be.jsonSchema(schema);",
+							"            pm.expect(responseJSON).to.be.jsonSchema(schema);",
 							"        }",
 							"        // If the response is neither an object nor an array, the test will fail",
 							"        else {",
