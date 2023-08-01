@@ -29,7 +29,7 @@
 							}
 						}
 					],
-					"_postman_id": "7ce06b04-8481-4850-a0a9-547194ff5608",
+					"id": "7ce06b04-8481-4850-a0a9-547194ff5608",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -64,7 +64,7 @@
 							}
 						}
 					],
-					"_postman_id": "dae58274-b523-4ebe-941f-3aa28db8af49",
+					"id": "dae58274-b523-4ebe-941f-3aa28db8af49",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -100,7 +100,7 @@
 							}
 						}
 					],
-					"_postman_id": "4855ce2c-49d1-4573-ae16-1d92179cfdd1",
+					"id": "4855ce2c-49d1-4573-ae16-1d92179cfdd1",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -138,7 +138,7 @@
 							}
 						}
 					],
-					"_postman_id": "1a5c75a0-8166-4911-bf89-58f25441c1a9",
+					"id": "1a5c75a0-8166-4911-bf89-58f25441c1a9",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -178,7 +178,7 @@
 							}
 						}
 					],
-					"_postman_id": "73fb5cc0-7ab4-4568-8d4e-62fc56c9eec3",
+					"id": "73fb5cc0-7ab4-4568-8d4e-62fc56c9eec3",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -190,12 +190,12 @@
 					"response": []
 				}
 			],
-			"_postman_id": "dc950de8-8b61-4660-8083-58b7909a1e18",
+			"id": "dc950de8-8b61-4660-8083-58b7909a1e18",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "633e78d3-2158-4cf4-a6c5-0cb74670dac5",
+						"id": "522a4d27-005f-417b-96c3-016cb35172d7",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -205,66 +205,56 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "5bb7dc1a-4cdc-40b0-8bae-ad1f397c802b",
+						"id": "b0d2d915-7067-4cd5-9391-98710d3ae23a",
 						"type": "text/javascript",
 						"exec": [
+							"const projectSchema = {",
+							"    \"type\": \"object\",",
+							"    \"properties\": {",
+							"        \"id\": { \"type\": \"string\" },",
+							"        \"parent_id\": { \"type\": [\"null\", \"string\"] },",
+							"        \"order\": { \"type\": \"number\" },",
+							"        \"color\": { \"type\": \"string\" },",
+							"        \"name\": { \"type\": \"string\" },",
+							"        \"comment_count\": { \"type\": \"number\" },",
+							"        \"is_shared\": { \"type\": \"boolean\" },",
+							"        \"is_favorite\": { \"type\": \"boolean\" },",
+							"        \"is_inbox_project\": { \"type\": \"boolean\" },",
+							"        \"is_team_inbox\": { \"type\": \"boolean\" },",
+							"        \"url\": { \"type\": \"string\" },",
+							"        \"view_style\": { \"type\": \"string\" }",
+							"    },",
+							"    \"required\": [\"id\", \"order\", \"color\", \"name\", \"comment_count\", \"is_shared\", \"is_favorite\", \"is_inbox_project\", \"is_team_inbox\", \"url\", \"view_style\"]",
+							"};",
+							"",
 							"// Test to check the response body structure for Project object",
 							"if (pm.request.method === 'GET' || pm.request.method === 'POST') {",
 							"    pm.test(\"Response body structure is valid\", function () {",
 							"        var responseJSON = pm.response.json();",
 							"",
-							"        // If the response is an array, check each project object in the array",
-							"        if (Array.isArray(responseJSON)) {",
-							"            responseJSON.forEach(function (project) {",
-							"                pm.expect(project).to.be.an('object').that.has.all.keys(",
-							"                    'id', 'parent_id', 'order', 'color', 'name',",
-							"                    'comment_count', 'is_shared', 'is_favorite',",
-							"                    'is_inbox_project', 'is_team_inbox', 'url', 'view_style'",
-							"                );",
+							"        // Define the JSON schema for the expected response structure of an array of project objects",
+							"        const arrayProjectSchema = {",
+							"            \"type\": \"array\",",
+							"            \"items\": projectSchema",
+							"        };",
 							"",
-							"                // Type checks for each attribute",
-							"                pm.expect(project.id).to.be.a('string');",
-							"                pm.expect(project.parent_id).to.be.oneOf([null, 'string']);",
-							"                pm.expect(project.order).to.be.a('number');",
-							"                pm.expect(project.color).to.be.a('string');",
-							"                pm.expect(project.name).to.be.a('string');",
-							"                pm.expect(project.comment_count).to.be.a('number');",
-							"                pm.expect(project.is_shared).to.be.a('boolean');",
-							"                pm.expect(project.is_favorite).to.be.a('boolean');",
-							"                pm.expect(project.is_inbox_project).to.be.a('boolean');",
-							"                pm.expect(project.is_team_inbox).to.be.a('boolean');",
-							"                pm.expect(project.url).to.be.a('string');",
-							"                pm.expect(project.view_style).to.be.a('string');",
-							"            });",
+							"        // If the response is an array, check the entire array against the schema",
+							"        if (Array.isArray(responseJSON)) {",
+							"            // Check if the response has a valid JSON body",
+							"            pm.expect(responseJSON).to.be.jsonSchema(arrayProjectSchema);",
 							"        }",
 							"        // If the response is a single project object, check its structure and types directly",
 							"        else if (typeof responseJSON === 'object') {",
-							"            pm.expect(responseJSON).to.be.an('object').that.has.all.keys(",
-							"                'id', 'parent_id', 'order', 'color', 'name',",
-							"                'comment_count', 'is_shared', 'is_favorite',",
-							"                'is_inbox_project', 'is_team_inbox', 'url', 'view_style'",
-							"            );",
-							"",
-							"            // Type checks for each attribute",
-							"            pm.expect(responseJSON.id).to.be.a('string');",
-							"            pm.expect(responseJSON.parent_id).to.be.oneOf([null, 'string']);",
-							"            pm.expect(responseJSON.order).to.be.a('number');",
-							"            pm.expect(responseJSON.color).to.be.a('string');",
-							"            pm.expect(responseJSON.name).to.be.a('string');",
-							"            pm.expect(responseJSON.comment_count).to.be.a('number');",
-							"            pm.expect(responseJSON.is_shared).to.be.a('boolean');",
-							"            pm.expect(responseJSON.is_favorite).to.be.a('boolean');",
-							"            pm.expect(responseJSON.is_inbox_project).to.be.a('boolean');",
-							"            pm.expect(responseJSON.is_team_inbox).to.be.a('boolean');",
-							"            pm.expect(responseJSON.url).to.be.a('string');",
-							"            pm.expect(responseJSON.view_style).to.be.a('string');",
+							"            // Check if the response has a valid JSON body",
+							"            pm.expect(responseJSON).to.be.jsonSchema(projectSchema);",
 							"        }",
 							"        // If the response is neither an object nor an array, the test will fail",
 							"        else {",
 							"            pm.expect.fail(\"Invalid response format. Expected an object or an array.\");",
 							"        }",
 							"    });",
-							"}"
+							"}",
+							""
 						]
 					}
 				}
@@ -297,7 +287,7 @@
 							}
 						}
 					],
-					"_postman_id": "9014f7d2-fcf8-47ea-a29e-1139eddda22c",
+					"id": "9014f7d2-fcf8-47ea-a29e-1139eddda22c",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -338,7 +328,7 @@
 							}
 						}
 					],
-					"_postman_id": "c6ef91c8-bd32-4641-8af3-84567aeb63ff",
+					"id": "c6ef91c8-bd32-4641-8af3-84567aeb63ff",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -347,10 +337,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {}
-							}
+							"raw": ""
 						},
 						"url": {
 							"raw": "{{todoist_url}}/sections?project_id={{project_id}}",
@@ -386,7 +373,7 @@
 							}
 						}
 					],
-					"_postman_id": "fbb3c62b-9336-48cc-a924-ab19b9968fce",
+					"id": "fbb3c62b-9336-48cc-a924-ab19b9968fce",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -423,7 +410,7 @@
 							}
 						}
 					],
-					"_postman_id": "3f79f5df-900e-466a-b75a-5feebf4b981c",
+					"id": "3f79f5df-900e-466a-b75a-5feebf4b981c",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -463,7 +450,7 @@
 							}
 						}
 					],
-					"_postman_id": "2ec97ae1-b76a-4142-845b-ea51fde272f2",
+					"id": "2ec97ae1-b76a-4142-845b-ea51fde272f2",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -475,12 +462,12 @@
 					"response": []
 				}
 			],
-			"_postman_id": "6e0f5e89-50e0-4eb3-8e57-075a560a6224",
+			"id": "6e0f5e89-50e0-4eb3-8e57-075a560a6224",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "4f556cbb-3106-481c-89f6-e567d95ad22a",
+						"id": "3d4d42b3-72f4-4f18-8df0-35898929eba2",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -490,48 +477,49 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "a323d6c2-9204-4987-b2a2-4fa688679e0a",
+						"id": "1ccde8ee-9d36-41c1-98f4-5e0bf8531f18",
 						"type": "text/javascript",
 						"exec": [
+							"// Common schema for Section object",
+							"const sectionSchema = {",
+							"    \"type\": \"object\",",
+							"    \"properties\": {",
+							"        \"id\": { \"type\": \"string\" },",
+							"        \"project_id\": { \"type\": \"string\" },",
+							"        \"order\": { \"type\": \"number\" },",
+							"        \"name\": { \"type\": \"string\" }",
+							"    },",
+							"    \"required\": [\"id\", \"project_id\", \"order\", \"name\"]",
+							"};",
+							"",
 							"// Test to check the response body structure for Section object",
 							"if (pm.request.method === 'GET' || pm.request.method === 'POST') {",
 							"    pm.test(\"Response body structure is valid\", function () {",
 							"        var responseJSON = pm.response.json();",
 							"",
-							"        // If the response is an array, check each section object in the array",
+							"        // Define the JSON schema for the expected response structure of an array of section objects",
+							"        const arraySectionSchema = {",
+							"            \"type\": \"array\",",
+							"            \"items\": sectionSchema",
+							"        };",
+							"",
+							"        // If the response is an array, check the entire array against the schema",
 							"        if (Array.isArray(responseJSON)) {",
-							"            responseJSON.forEach(function (section) {",
-							"                pm.expect(section).to.be.an('object').that.has.all.keys(",
-							"                    'id', 'project_id', 'order', 'name'",
-							"                );",
-							"",
-							"                // Type checks for each attribute in the section object",
-							"                pm.expect(section.id).to.be.a('string');",
-							"                pm.expect(section.project_id).to.be.a('string');",
-							"                pm.expect(section.order).to.be.a('number');",
-							"                pm.expect(section.name).to.be.a('string');",
-							"            });",
+							"            // Check if the response has a valid JSON body",
+							"            pm.expect(responseJSON).to.be.jsonSchema(arraySectionSchema);",
 							"        }",
-							"",
 							"        // If the response is a single section object, check its structure and types directly",
 							"        else if (typeof responseJSON === 'object') {",
-							"            pm.expect(responseJSON).to.be.an('object').that.has.all.keys(",
-							"                'id', 'project_id', 'order', 'name'",
-							"            );",
-							"",
-							"            // Type checks for each attribute in the section object",
-							"            pm.expect(responseJSON.id).to.be.a('string');",
-							"            pm.expect(responseJSON.project_id).to.be.a('string');",
-							"            pm.expect(responseJSON.order).to.be.a('number');",
-							"            pm.expect(responseJSON.name).to.be.a('string');",
+							"            // Check if the response has a valid JSON body",
+							"            pm.expect(responseJSON).to.be.jsonSchema(sectionSchema);",
 							"        }",
-							"",
 							"        // If the response is neither an object nor an array, the test will fail",
 							"        else {",
 							"            pm.expect.fail(\"Invalid response format. Expected an object or an array.\");",
 							"        }",
 							"    });",
-							"}"
+							"}",
+							""
 						]
 					}
 				}
@@ -554,7 +542,7 @@
 							}
 						}
 					],
-					"_postman_id": "9cb895c3-3345-4a67-a10d-98874a063166",
+					"id": "9cb895c3-3345-4a67-a10d-98874a063166",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -589,7 +577,7 @@
 							}
 						}
 					],
-					"_postman_id": "ed60e65d-2b6d-41b8-9516-6e3d86de6151",
+					"id": "ed60e65d-2b6d-41b8-9516-6e3d86de6151",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -625,7 +613,7 @@
 							}
 						}
 					],
-					"_postman_id": "81ddd6ec-8d45-4870-8055-3760b139e3f5",
+					"id": "81ddd6ec-8d45-4870-8055-3760b139e3f5",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -663,7 +651,7 @@
 							}
 						}
 					],
-					"_postman_id": "09c046cc-779d-49c0-899c-b79b42cf82cb",
+					"id": "09c046cc-779d-49c0-899c-b79b42cf82cb",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -699,7 +687,7 @@
 							}
 						}
 					],
-					"_postman_id": "eac4c157-80b9-4819-b2af-73d9133ee86d",
+					"id": "eac4c157-80b9-4819-b2af-73d9133ee86d",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -726,7 +714,7 @@
 							}
 						}
 					],
-					"_postman_id": "d08cba80-a2d9-485f-9b24-4b7b5a0194c7",
+					"id": "d08cba80-a2d9-485f-9b24-4b7b5a0194c7",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -757,7 +745,7 @@
 							}
 						}
 					],
-					"_postman_id": "b9ca6c3b-5ad5-4379-bf7e-b3ee8c7da935",
+					"id": "b9ca6c3b-5ad5-4379-bf7e-b3ee8c7da935",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -769,12 +757,12 @@
 					"response": []
 				}
 			],
-			"_postman_id": "4b6dc908-b784-41b8-af45-243f2a0723cd",
+			"id": "4b6dc908-b784-41b8-af45-243f2a0723cd",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "623ba7fa-2325-4477-94b1-e9d9968acb00",
+						"id": "4e0c2e57-da91-4b74-8833-4ff7ef5e0069",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -784,42 +772,91 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "f9e3c52a-80f7-4b0c-97c0-015f4414c3a2",
+						"id": "f3f1c066-114a-4431-b96b-f52dbea0cf10",
 						"type": "text/javascript",
 						"exec": [
-							"// Test to check the response body structure for Project object",
+							"// Common schema for non-empty Task object",
+							"const taskSchema = {",
+							"    \"type\": \"object\",",
+							"    \"properties\": {",
+							"        \"id\": { \"type\": \"string\" },",
+							"        \"project_id\": { \"type\": \"string\" },",
+							"        \"section_id\": { \"type\": \"string\" },",
+							"        \"content\": { \"type\": \"string\" },",
+							"        \"description\": { \"type\": \"string\" },",
+							"        \"is_completed\": { \"type\": \"boolean\" },",
+							"        \"labels\": {",
+							"            \"type\": \"array\",",
+							"            \"items\": { \"type\": \"string\" }",
+							"        },",
+							"        \"parent_id\": { \"type\": [\"null\", \"string\"] },",
+							"        \"order\": { \"type\": \"number\" },",
+							"        \"priority\": { \"type\": \"number\" },",
+							"        \"due\": { \"type\": \"object\" },",
+							"        \"url\": { \"type\": \"string\" },",
+							"        \"comment_count\": { \"type\": \"number\" },",
+							"        \"created_at\": { \"type\": \"string\" },",
+							"        \"creator_id\": { \"type\": \"string\" },",
+							"        \"assignee_id\": { \"type\": [\"null\", \"string\"] },",
+							"        \"assigner_id\": { \"type\": [\"null\", \"string\"] },",
+							"        \"duration\": { \"type\": \"object\" }",
+							"    },",
+							"    \"required\": [\"id\", \"project_id\", \"section_id\", \"content\", \"is_completed\"]",
+							"};",
+							"",
+							"// Common schema for empty Task response",
+							"const emptyTaskSchema = {",
+							"    \"type\": \"null\"",
+							"};",
+							"",
+							"// List of API endpoints where POST requests are expected to have empty responses",
+							"const endpointsWithEmptyPostResponses = [",
+							"    '{{todoist_url}}/tasks/{{task_id}}/close',",
+							"    '{{todoist_url}}/tasks/{{task_id}}/reopen',",
+							"];",
+							"",
+							"// Test to check the response body structure for Task object",
 							"if (pm.request.method === 'GET' || pm.request.method === 'POST') {",
 							"    pm.test(\"Response body structure is valid\", function () {",
 							"        var responseJSON = pm.response.json();",
+							"        var isPostRequest = pm.request.method === 'POST';",
+							"        var isExpectedEmptyPostResponse = isPostRequest && endpointsWithEmptyPostResponses.includes(pm.request.url);",
 							"",
-							"        // If the response is an array, check each project object in the array",
-							"        if (Array.isArray(responseJSON)) {",
-							"            responseJSON.forEach(function (project) {",
-							"                pm.expect(project).to.be.an('object').that.has.all.keys(",
-							"                    'id', 'project_id', 'section_id', 'content', 'description',",
-							"                    'is_completed', 'labels', 'parent_id', 'order',",
-							"                    'priority', 'due', 'url', 'comment_count',",
-							"                    'created_at', 'creator_id', 'assignee_id',",
-							"                    'assigner_id', 'duration'",
-							"                );",
-							"            });",
+							"        // Define the JSON schema for the expected response structure of an array of task objects",
+							"        const arrayTaskSchema = {",
+							"            \"type\": \"array\",",
+							"            \"items\": taskSchema",
+							"        };",
+							"",
+							"        // Check for empty response for a POST request",
+							"        if (isExpectedEmptyPostResponse && responseJSON === null) {",
+							"            // No need to check the response schema for this POST request",
+							"            // as it is expected to be empty",
+							"            return;",
 							"        }",
-							"        // If the response is a single project object, check its structure and types directly",
+							"        // Check for empty response for other requests",
+							"        if (responseJSON === null) {",
+							"            // Check if the response has a valid JSON body (empty)",
+							"            pm.expect(responseJSON).to.be.jsonSchema(emptyTaskSchema);",
+							"        }",
+							"",
+							"        // If the response is an array, check each task object in the array",
+							"        else if (Array.isArray(responseJSON)) {",
+							"            // Check if the response has a valid JSON body",
+							"            pm.expect(responseJSON).to.be.jsonSchema(arrayTaskSchema);",
+							"        }",
+							"        // If the response is a single task object, check its structure and types directly",
 							"        else if (typeof responseJSON === 'object') {",
-							"            pm.expect(responseJSON).to.be.an('object').that.has.all.keys(",
-							"                'id', 'project_id', 'section_id', 'content', 'description',",
-							"                'is_completed', 'labels', 'parent_id', 'order',",
-							"                'priority', 'due', 'url', 'comment_count',",
-							"                'created_at', 'creator_id', 'assignee_id',",
-							"                'assigner_id', 'duration'",
-							"            );",
+							"            // Check if the response has a valid JSON body (non-empty)",
+							"            pm.expect(responseJSON).to.be.jsonSchema(taskSchema);",
 							"        }",
-							"        // If the response is neither an object nor an array, the test will fail",
+							"        // If the response is neither an object nor an array (invalid response format), the test will fail",
 							"        else {",
-							"            pm.expect.fail(\"Invalid response format. Expected an object or an array.\");",
+							"            pm.expect.fail(\"Invalid response format. Expected an object, an array, or an empty response.\");",
 							"        }",
 							"    });",
-							"}"
+							"}",
+							""
 						]
 					}
 				}
@@ -850,7 +887,7 @@
 							}
 						}
 					],
-					"_postman_id": "45740ca5-2c1d-4242-b393-fbbebf2aef09",
+					"id": "45740ca5-2c1d-4242-b393-fbbebf2aef09",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -899,7 +936,7 @@
 							}
 						}
 					],
-					"_postman_id": "abf27f30-ed2a-4cbd-ba73-be7bcf89d136",
+					"id": "abf27f30-ed2a-4cbd-ba73-be7bcf89d136",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -935,7 +972,7 @@
 							}
 						}
 					],
-					"_postman_id": "0be88253-8514-439f-bc71-9634eab121a3",
+					"id": "0be88253-8514-439f-bc71-9634eab121a3",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -973,7 +1010,7 @@
 							}
 						}
 					],
-					"_postman_id": "ae03ea2a-822b-4858-a475-c12b23e8e95f",
+					"id": "ae03ea2a-822b-4858-a475-c12b23e8e95f",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -1013,7 +1050,7 @@
 							}
 						}
 					],
-					"_postman_id": "ecdbc9da-11d7-4a5a-b0ae-95bb58158f89",
+					"id": "ecdbc9da-11d7-4a5a-b0ae-95bb58158f89",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -1025,12 +1062,12 @@
 					"response": []
 				}
 			],
-			"_postman_id": "46e89983-a25e-47da-b56c-15368f3f9289",
+			"id": "46e89983-a25e-47da-b56c-15368f3f9289",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "d6f74536-8b5e-4470-9e11-07f4bfc58776",
+						"id": "934162b3-c43f-4751-b022-7b191f5d83d5",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1040,58 +1077,51 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "d5e033da-beda-4730-bec7-08cb3e31f1e6",
+						"id": "44df7e3c-2ae1-481d-9409-b112af209df6",
 						"type": "text/javascript",
 						"exec": [
+							"// Common schema for Comment object",
+							"const commentSchema = {",
+							"    \"type\": \"object\",",
+							"    \"properties\": {",
+							"        \"id\": { \"type\": \"string\" },",
+							"        \"task_id\": { \"type\": [\"null\", \"string\"] },",
+							"        \"project_id\": { \"type\": [\"null\", \"string\"] },",
+							"        \"posted_at\": { \"type\": \"string\" },",
+							"        \"content\": { \"type\": \"string\" },",
+							"        \"attachment\": { \"type\": [\"null\", \"object\"] }",
+							"    },",
+							"    \"required\": [\"id\", \"task_id\", \"project_id\", \"posted_at\", \"content\", \"attachment\"]",
+							"};",
+							"",
 							"// Test to check the response body structure for Comment object",
 							"if (pm.request.method === 'GET' || pm.request.method === 'POST') {",
 							"    pm.test(\"Response body structure is valid\", function () {",
 							"        var responseJSON = pm.response.json();",
 							"",
-							"        // If the response is an array, check each comment object in the array",
+							"        // Define the JSON schema for the expected response structure of an array of comment objects",
+							"        const arrayCommentSchema = {",
+							"            \"type\": \"array\",",
+							"            \"items\": commentSchema",
+							"        };",
+							"",
+							"        // If the response is an array, check the entire array against the schema",
 							"        if (Array.isArray(responseJSON)) {",
-							"            responseJSON.forEach(function (comment) {",
-							"                pm.expect(comment).to.be.an('object').that.has.all.keys(",
-							"                    'id', 'task_id', 'project_id', 'posted_at', ",
-							"                    'content', 'attachment'",
-							"                );",
-							"",
-							"                // Type checks for each attribute",
-							"                pm.expect(comment.id).to.be.a('string');",
-							"",
-							"                console.log(typeof comment.task_id);",
-							"                pm.expect(comment.task_id).to.be.oneOf([null, 'string']);",
-							"",
-							"                pm.expect(comment.project_id).to.be.oneOf([null, 'string']);",
-							"                pm.expect(comment.posted_at).to.be.a('string');",
-							"                pm.expect(comment.content).to.be.a('string');",
-							"                pm.expect(comment.attachment).to.be.oneOf([null, 'object']);",
-							"            });",
+							"            // Check if the response has a valid JSON body",
+							"            pm.expect(responseJSON).to.be.jsonSchema(arrayCommentSchema);",
 							"        }",
 							"        // If the response is a single comment object, check its structure and types directly",
 							"        else if (typeof responseJSON === 'object') {",
-							"            pm.expect(responseJSON).to.be.an('object').that.has.all.keys(",
-							"                'id', 'task_id', 'project_id', 'posted_at', ",
-							"                'content', 'attachment'",
-							"            );",
-							"",
-							"            // Type checks for each attribute",
-							"            pm.expect(responseJSON.id).to.be.a('string');",
-							"",
-							"            console.log(typeof responseJSON.task_id);",
-							"            pm.expect(responseJSON.task_id).to.be.oneOf([null, 'string']);",
-							"",
-							"            pm.expect(responseJSON.project_id).to.be.oneOf([null, 'string']);",
-							"            pm.expect(responseJSON.posted_at).to.be.a('string');",
-							"            pm.expect(responseJSON.content).to.be.a('string');",
-							"            pm.expect(responseJSON.attachment).to.be.oneOf([null, 'object']);",
+							"            // Check if the response has a valid JSON body",
+							"            pm.expect(responseJSON).to.be.jsonSchema(commentSchema);",
 							"        }",
 							"        // If the response is neither an object nor an array, the test will fail",
 							"        else {",
 							"            pm.expect.fail(\"Invalid response format. Expected an object or an array.\");",
 							"        }",
 							"    });",
-							"}"
+							"}",
+							""
 						]
 					}
 				}
@@ -1122,7 +1152,7 @@
 							}
 						}
 					],
-					"_postman_id": "9c00bebd-11cb-46ef-9f29-52f7dd37aa9d",
+					"id": "9c00bebd-11cb-46ef-9f29-52f7dd37aa9d",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -1131,10 +1161,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {}
-							}
+							"raw": ""
 						},
 						"url": "{{todoist_url}}/labels"
 					},
@@ -1164,7 +1191,7 @@
 							}
 						}
 					],
-					"_postman_id": "46c16440-6940-416b-b8f2-99567561b629",
+					"id": "46c16440-6940-416b-b8f2-99567561b629",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -1200,7 +1227,7 @@
 							}
 						}
 					],
-					"_postman_id": "59b8e50a-b1d4-41ba-a4d1-a085df7bc93a",
+					"id": "59b8e50a-b1d4-41ba-a4d1-a085df7bc93a",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -1238,7 +1265,7 @@
 							}
 						}
 					],
-					"_postman_id": "3c3b511d-ca40-4795-97c7-f153e0223811",
+					"id": "3c3b511d-ca40-4795-97c7-f153e0223811",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -1278,7 +1305,7 @@
 							}
 						}
 					],
-					"_postman_id": "41338abe-1db4-40ba-bd5e-a3d2bbb5e49c",
+					"id": "41338abe-1db4-40ba-bd5e-a3d2bbb5e49c",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -1290,12 +1317,12 @@
 					"response": []
 				}
 			],
-			"_postman_id": "64539a59-ee0d-4f04-bc97-c96e32976164",
+			"id": "64539a59-ee0d-4f04-bc97-c96e32976164",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "9b03919e-bd1d-42f0-be86-0adce263052b",
+						"id": "78e5a5bd-4b05-417e-a5b2-c24d463c36eb",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1305,50 +1332,50 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "a368e325-04d8-40e3-81ac-56ec21f505dd",
+						"id": "1edc19c6-50f9-432a-8ab7-e2296e9ff2f5",
 						"type": "text/javascript",
 						"exec": [
-							"// Test to check the response body structure for Comment object",
+							"// Common schema for Label object",
+							"const labelSchema = {",
+							"    \"type\": \"object\",",
+							"    \"properties\": {",
+							"        \"id\": { \"type\": \"string\" },",
+							"        \"name\": { \"type\": \"string\" },",
+							"        \"color\": { \"type\": \"string\" },",
+							"        \"order\": { \"type\": \"number\" },",
+							"        \"is_favorite\": { \"type\": \"boolean\" }",
+							"    },",
+							"    \"required\": [\"id\", \"name\", \"color\", \"order\", \"is_favorite\"]",
+							"};",
+							"",
+							"// Test to check the response body structure for Label object",
 							"if (pm.request.method === 'GET' || pm.request.method === 'POST') {",
 							"    pm.test(\"Response body structure is valid\", function () {",
 							"        var responseJSON = pm.response.json();",
 							"",
-							"        // If the response is an array, check each comment object in the array",
-							"        if (Array.isArray(responseJSON)) {",
-							"            responseJSON.forEach(function (comment) {",
-							"                pm.expect(comment).to.be.an('object').that.has.all.keys(",
-							"                    'id', 'name', 'color', ",
-							"                    'order', 'is_favorite'",
-							"                );",
+							"        // Define the JSON schema for the expected response structure of an array of label objects",
+							"        const arrayLabelSchema = {",
+							"            \"type\": \"array\",",
+							"            \"items\": labelSchema",
+							"        };",
 							"",
-							"                // Type checks for each attribute",
-							"                pm.expect(comment.id).to.be.a('string');",
-							"                pm.expect(comment.name).to.be.a('string');",
-							"                pm.expect(comment.color).to.be.a('string');",
-							"                pm.expect(comment.order).to.be.a('number');",
-							"                pm.expect(comment.is_favorite).to.be.a('boolean');",
-							"            });",
+							"        // If the response is an array, check the entire array against the schema",
+							"        if (Array.isArray(responseJSON)) {",
+							"            // Check if the response has a valid JSON body",
+							"            pm.expect(responseJSON).to.be.jsonSchema(arrayLabelSchema);",
 							"        }",
 							"        // If the response is a single comment object, check its structure and types directly",
 							"        else if (typeof responseJSON === 'object') {",
-							"            pm.expect(responseJSON).to.be.an('object').that.has.all.keys(",
-							"                'id', 'name', 'color', ",
-							"                'order', 'is_favorite'",
-							"            );",
-							"",
-							"            // Type checks for each attribute",
-							"                pm.expect(responseJSON.id).to.be.a('string');",
-							"                pm.expect(responseJSON.name).to.be.a('string');",
-							"                pm.expect(responseJSON.color).to.be.a('string');",
-							"                pm.expect(responseJSON.order).to.be.a('number');",
-							"                pm.expect(responseJSON.is_favorite).to.be.a('boolean');",
+							"            // Check if the response has a valid JSON body",
+							"            pm.expect(responseJSON).to.be.jsonSchema(labelSchema);",
 							"        }",
 							"        // If the response is neither an object nor an array, the test will fail",
 							"        else {",
 							"            pm.expect.fail(\"Invalid response format. Expected an object or an array.\");",
 							"        }",
 							"    });",
-							"}"
+							"}",
+							""
 						]
 					}
 				}
@@ -1365,7 +1392,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "59c31e83-e0d1-4eb2-b1f2-8b379cee9b03",
+				"id": "f13fadef-85ab-4fab-a663-4494cc111ec5",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -1375,20 +1402,13 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "1ba26ecc-5911-48af-9f17-f5776f3ea367",
+				"id": "176c8dbf-0f2e-47c8-8401-bc8ccdc3b6fb",
 				"type": "text/javascript",
 				"exec": [
-					"// Ensure that the status code is 200 for GET, POST and 204 for DELETE.",
-					"if (pm.request.method === 'GET' || pm.request.method === 'POST') {",
-					"    pm.test(\"Response status code is 200\", function () {",
-					"        pm.response.to.have.status(200);",
-					"    });",
-					"}",
-					"if (pm.request.method === 'DELETE') {",
-					"    pm.test(\"Response status code is 204\", function () {",
-					"        pm.response.to.have.status(204);",
-					"    });",
-					"}",
+					"// Test for response status code of 200 or 204",
+					"pm.test(\"Response status code is 200 or 204\", function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+					"});",
 					"",
 					"// Check that the response time is within an acceptable range.",
 					"pm.test(\"Response time is less than 1000ms\", function () {",

@@ -7,7 +7,7 @@
 	"item": [
 		{
 			"name": "Create project - get project id",
-			"_postman_id": "dc740f4b-0a65-4211-9793-2a8aba9ff12e",
+			"id": "dc740f4b-0a65-4211-9793-2a8aba9ff12e",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -45,7 +45,7 @@
 					}
 				}
 			],
-			"_postman_id": "5cd052e7-3b7d-4101-b17d-87b793604a8f",
+			"id": "5cd052e7-3b7d-4101-b17d-87b793604a8f",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -83,7 +83,7 @@
 					}
 				}
 			],
-			"_postman_id": "70f2bc65-a25b-4980-9805-6ad271c071a6",
+			"id": "70f2bc65-a25b-4980-9805-6ad271c071a6",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -121,7 +121,7 @@
 					}
 				}
 			],
-			"_postman_id": "ded9b3ee-1599-48f5-9a6e-493d9b2a2006",
+			"id": "ded9b3ee-1599-48f5-9a6e-493d9b2a2006",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -157,7 +157,7 @@
 					}
 				}
 			],
-			"_postman_id": "5e493fb3-3a0d-45c5-bf59-2d6a048241f1",
+			"id": "5e493fb3-3a0d-45c5-bf59-2d6a048241f1",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -194,7 +194,7 @@
 					}
 				}
 			],
-			"_postman_id": "0a3ed1ac-1841-457b-802b-43bbec530842",
+			"id": "0a3ed1ac-1841-457b-802b-43bbec530842",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -231,7 +231,7 @@
 					}
 				}
 			],
-			"_postman_id": "63f7b088-11ef-4b58-a4cb-437e6bccfcc5",
+			"id": "63f7b088-11ef-4b58-a4cb-437e6bccfcc5",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -252,14 +252,13 @@
 						"exec": [
 							"pm.test(\"Incorrect task id provided. Status code is 400 Bad Request\", function () {",
 							"    pm.response.to.have.status(400);",
-							"});",
-							""
+							"});"
 						],
 						"type": "text/javascript"
 					}
 				}
 			],
-			"_postman_id": "bf000336-f200-4f0a-811b-aecd25e47ab8",
+			"id": "bf000336-f200-4f0a-811b-aecd25e47ab8",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
