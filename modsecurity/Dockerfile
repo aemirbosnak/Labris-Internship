@@ -1,12 +1,5 @@
 FROM tgagor/centos-stream:stream8
 
-# Install ssl certificate
-RUN yum install -y ca-certificates
-RUN update-ca-trust force-enable
-
-COPY cagri.crt /etc/pki/ca-trust/source/anchors/
-RUN update-ca-trust extract
-
 # Install build tools and dependencies
 RUN yum install -y gcc-c++ flex bison yajl curl-devel curl zlib-devel pcre-devel autoconf automake git curl make libxml2-devel pkgconfig libtool httpd-devel redhat-rpm-config git wget openssl openssl-devel
 
