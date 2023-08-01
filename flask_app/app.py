@@ -255,6 +255,9 @@ def list_users():
 # Endpoint for getting online users
 @app.route('/onlineusers', methods=['GET'])
 def get_online_users():
+
+    check_logout_users()
+
     try:
         online_users = OnlineUser.query.all()
 
