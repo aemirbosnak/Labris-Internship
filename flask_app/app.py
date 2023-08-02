@@ -369,8 +369,8 @@ def check_logout_users():
         db.session.rollback()
 
 
-if __name__ == '__main__':
+@app.before_request
+def init_db():
     with app.app_context():
         db.create_all()
         db.session.commit()
-        app.run(debug=True)
