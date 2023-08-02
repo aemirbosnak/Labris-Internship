@@ -1,23 +1,26 @@
 version: "1"
 services:
-    flask_app:
-        build:
-            context: ./flask_app
-        ports:
-            - "5000:5000"
-        depends_on:
-            - db
-        networks:
-            - my_network
-
     db:
         image: postgres:latest
+        restart: always
+        hostname: postgres
         environment: 
             POSTGRES_USER: flask
             POSTGRES_PASSWORD: flask123
             POSTGRES_DB: flask_db
         ports:
             - "5432:5432"
+        networks:
+            - my_network
+
+    flask_app:
+        restart: always
+        build:
+            context: .
+        ports:
+            - "5000:5000"
+        depends_on:
+            - db
         networks:
             - my_network
 

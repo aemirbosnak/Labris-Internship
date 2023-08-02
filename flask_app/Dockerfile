@@ -11,14 +11,12 @@ COPY requirements.txt .
 RUN pip install --cert /etc/ssl/certs/cagri.pem --timeout=1000 --no-cache-dir -r requirements.txt
 
 # Copy Flask application code into the container
-COPY app.py .
-COPY logging_config.py .
-ADD database/ ./database/
+COPY . .
 
 # Expose the port
 EXPOSE 5000
 
 # Command to run Flask app 
 # TODO make it run with uwsgi
-CMD ["python", "app.py"]
+CMD ["flask", "run", "--host", "0.0.0.0"]
 
