@@ -294,6 +294,13 @@ def get_online_users():
         return jsonify({"error": "An error occurred."}), 500
 
 
+# Endpoint for insecure testing (for OWASP Top 10 security testing)
+@app.route('/insecure_endpoint', methods=['POST'])
+def insecure_endpoint():
+    data = request.get_json()
+    return jsonify(data), 200
+
+
 def is_password_valid(password):
     try:
         # password complexity: at least one from [A-Za-z0-9] and min 8 characters
