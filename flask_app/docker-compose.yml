@@ -1,4 +1,4 @@
-version: "1"
+version: "3"
 services:
     db:
         image: postgres:latest
@@ -12,6 +12,7 @@ services:
             - "5432:5432"
         networks:
             - my_network
+        container_name: db
 
     web:
         restart: always
@@ -24,6 +25,8 @@ services:
             - db
         networks:
             - my_network
+        image: flask-app
+        container_name: web
 
     server:
         restart: always
@@ -35,6 +38,8 @@ services:
             - web
         networks:
             - my_network
+        image: flask-server
+        container_name: server
 
 networks:
     my_network:
