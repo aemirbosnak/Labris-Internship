@@ -1,15 +1,15 @@
 FROM tgagor/centos-stream:stream8
 
-# Install build tools and dependencies
-RUN dnf -y install epel-release && \
-    dnf -y install gcc-c++ flex bison yajl curl-devel curl  \
-    zlib-devel pcre-devel autoconf automake git make  \
-    libxml2-devel pkgconfig libtool httpd-devel redhat-rpm-config  \
-    wget openssl openssl-devel doxygen yajl-devel && \
-    dnf -y --enablerepo=powertools install GeoIP-devel \
-
 # Install Remi repository
-RUN yum install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+RUN yum install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm \
+    && yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+
+# Install build tools and dependencies
+RUN yum install -y gcc-c++ flex bison yajl curl-devel curl zlib-devel  \
+    pcre-devel autoconf automake git make libxml2-devel pkgconfig libtool  \
+    httpd-devel redhat-rpm-config wget openssl openssl-devel \
+    && yum -y --enablerepo=powertools install doxygen yajl-devel \
+    && yum -y --enablerepo=remi install GeoIP-devel
 
 # Install ModSecurity
 ARG MODSEC_VERSION=v3/master
@@ -48,7 +48,7 @@ RUN git clone https://github.com/coreruleset/coreruleset.git ${NGINX_INSTALL_PAT
 
 # Configure nginx with modsecurity
 COPY modsecurity.conf ${NGINX_INSTALL_PATH}/conf/modsecurity.conf
-COPY /opt/modsec/ModSecurity/unicode.mapping ${NGINX_INSTALL_PATH}/conf/
+RUN cp ${MODSEC_INSTALL_PATH}/ModSecurity/unicode.mapping ${NGINX_INSTALL_PATH}/conf
 RUN mkdir -p /var/log/nginx
 
 # Configure SSL server
