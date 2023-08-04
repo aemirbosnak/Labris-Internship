@@ -13,14 +13,26 @@ services:
         networks:
             - my_network
 
-    flask_app:
+    web:
         restart: always
         build:
-            context: .
+            context: ./
+            dockerfile: ./web/Dockerfile
         ports:
-            - "5000:5000"
+            - "5000-5000"
         depends_on:
             - db
+        networks:
+            - my_network
+
+    server:
+        restart: always
+        build: ./server
+        ports:
+            - "80:80"
+            - "443:443"
+        depends_on:
+            - web
         networks:
             - my_network
 

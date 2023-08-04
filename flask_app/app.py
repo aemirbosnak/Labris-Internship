@@ -2,6 +2,7 @@ from flask import request, jsonify, json
 from datetime import datetime, timedelta
 from passlib.hash import sha256_crypt
 from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.middleware.proxy_fix import ProxyFix
 import re
 
 from logging_config import configure_logging
@@ -10,6 +11,9 @@ from database.config import app, db
 
 # Load logging configuration
 configure_logging()
+
+# Configure reverse proxy
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
 
 # Endpoint for login
