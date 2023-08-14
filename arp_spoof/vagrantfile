@@ -13,8 +13,8 @@ Vagrant.configure("2") do |config|
 	    # Update package list
 	    apk update
  
-        # Install Python 3.8 and pip   
-        apk add python3
+            # Install Python 3.8 and pip   
+            apk add python3
 	    apk add py3-pip
 
 	    # Install scapy
