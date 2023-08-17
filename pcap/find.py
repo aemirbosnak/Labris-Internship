@@ -19,60 +19,85 @@ APPLICATION_DATA = 23
 SRC_IP = "10.200.200.1"
 DST_IP = "10.200.201.33"
 
-def generateFilter(msgtype=None, packet_type=None, source_ip=None):
-    def filterFunc(packet):
-        if packet_type == APPLICATION_DATA and source_ip is not None:
-            if packet[IP].src != source_ip:
-                return False
-        if packet_type is not None and packet[TLS].type != packet_type:
-            return False
-        if msgtype is not None and packet[TLS].msg[0].msgtype != msgtype:
-            return False
-        return True
-    return filterFunc
+# Relevant packet variables
+(
+    client_hello,
+    server_hello,
+    client_key_exchange,
+    new_session_ticket,
+    http_request,
+    http_response,
+    alert
+) = (None, None, None, None, None, None, None)
 
-def getPacket(packets, content_type, filterFunc):
-    for packet in packets:
-        if packet.haslayer(TLS) and packet[TLS].type == content_type and filterFunc(packet):
-            return raw(packet[TLS])
+def parsePacket(packet):
+    packet_type = packet[TLS].type
+    msg_type = None
+    packet_src_ip = packet[IP].src
+
+    if packet_type == HANDSHAKE:
+        # Get handshake type
+        msg_type = packet[TLS].msg[0].msgtype
+
+        # Transform packet to raw for processing
+        packet = raw(packet[TLS])
+
+        if msg_type == CLIENT_HELLO:
+            print("TLS handshake started - client hello")
+            global client_hello
+            client_hello = TLS(packet)
+        if msg_type == SERVER_HELLO:
+            print("server hello")
+            global server_hello
+            server_hello = TLS(packet, tls_session=client_hello.tls_session.mirror())
+            server_hello.tls_session.server_rsa_key = PrivKey(key.read())
+        if msg_type == CLIENT_KEY_EXCHANGE:
+            print("client key exchange")
+            global client_key_exchange
+            client_key_exchange = TLS(packet, tls_session=server_hello.tls_session.mirror())
+        if msg_type == SESSION_TICKET:
+            print("new session ticket")
+            global new_session_ticket
+            new_session_ticket = TLS(packet, tls_session=client_hello.tls_session.mirror())
+
+    if packet_type == APPLICATION_DATA:
+        # Transform packet to raw for processing
+        packet = raw(packet[TLS])
+
+        if packet_src_ip == SRC_IP:
+            global http_request
+            http_request = TLS(packet, tls_session=new_session_ticket.tls_session.mirror())
+            print("TLS handshake successful - http request decrypted")
+        if packet_src_ip == DST_IP:
+            global http_response
+            http_response = TLS(packet, tls_session=http_request.tls_session.mirror())
+            print("http response decrypted")
+
+    if packet_type == ALERT:
+        print("TLS session ending - printing decrypted data")
+        global alert
+        alert = 1
+
+        target_data = (http_response.msg[0].data).decode("utf-8")
+        printData(target_data)
+
+def printData(data):
+    url_pattern = r"https?://[^\s/$.?#].[^\s]*"
+    urls = re.findall(url_pattern, data)
+    print("\n***************Data***************")
+    for url in urls:
+        print(url)
 
 load_layer("tls")
 
 packets = rdpcap("best_game.pcap")
 key = open("server.key", "r")
 
-# client hello
-ch_packet = getPacket(packets, HANDSHAKE, generateFilter(msgtype=CLIENT_HELLO))
-ch = TLS(ch_packet)
-
-# server hello
-sh_packet = getPacket(packets, HANDSHAKE, generateFilter(msgtype=SERVER_HELLO))
-sh = TLS(sh_packet, tls_session=ch.tls_session.mirror())
-
-# Decode traffic with session key
-sh.tls_session.server_rsa_key = PrivKey(key.read())
-
-# client key exchange
-cke_packet = getPacket(packets, HANDSHAKE, generateFilter(msgtype=CLIENT_KEY_EXCHANGE))
-cke = TLS(cke_packet, tls_session=sh.tls_session.mirror())
-
-# new session ticket
-st_packet = getPacket(packets, HANDSHAKE, generateFilter(msgtype=SESSION_TICKET))
-st = TLS(st_packet, tls_session=cke.tls_session.mirror())
-
-# http request packet
-http_request_packet = getPacket(packets, APPLICATION_DATA, generateFilter(packet_type=APPLICATION_DATA, source_ip=SRC_IP))
-http_request = TLS(http_request_packet, tls_session=st.tls_session.mirror())
-
-# http response packet
-http_response_packet = getPacket(packets, APPLICATION_DATA, generateFilter(packet_type=APPLICATION_DATA, source_ip=DST_IP))
-http_response = TLS(http_response_packet, tls_session=http_request.tls_session.mirror())
-
-# Get info from http application data
-target_data = (http_response.msg[0].data).decode("utf-8")
-
-# Extract needed information (optional)
-url_pattern = r"https?://[^\s/$.?#].[^\s]*"
-urls = re.findall(url_pattern, target_data)
-for url in urls:
-    print(url)
+for packet in packets:
+    if packet.haslayer(TLS):
+        print("TLS packet - parsing...")
+        parsePacket(packet)
+        if alert == 1:
+            exit()
+    else:
+        print("Other - skipping...")
