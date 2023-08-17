@@ -1,3 +1,4 @@
+import re
 from scapy.all import *
 from scapy.layers.tls.cert import PrivKey
 from scapy.layers.tls.record import TLS
@@ -59,13 +60,19 @@ cke = TLS(cke_packet, tls_session=sh.tls_session.mirror())
 st_packet = getPacket(packets, HANDSHAKE, generateFilter(msgtype=SESSION_TICKET))
 st = TLS(st_packet, tls_session=cke.tls_session.mirror())
 
-# http request data
+# http request packet
 http_request_packet = getPacket(packets, APPLICATION_DATA, generateFilter(packet_type=APPLICATION_DATA, source_ip=SRC_IP))
 http_request = TLS(http_request_packet, tls_session=st.tls_session.mirror())
 
-# http response data
+# http response packet
 http_response_packet = getPacket(packets, APPLICATION_DATA, generateFilter(packet_type=APPLICATION_DATA, source_ip=DST_IP))
 http_response = TLS(http_response_packet, tls_session=http_request.tls_session.mirror())
 
 # Get info from http application data
-http_response.show()
+target_data = (http_response.msg[0].data).decode("utf-8")
+
+# Extract needed information (optional)
+url_pattern = r"https?://[^\s/$.?#].[^\s]*"
+urls = re.findall(url_pattern, target_data)
+for url in urls:
+    print(url)
