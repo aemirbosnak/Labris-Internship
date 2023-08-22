@@ -94,8 +94,8 @@ url_login = "http://0.0.0.0:8000/login.html"
 url_register = "http://0.0.0.0:8000/register.html"
 url_users = "http://0.0.0.0:8000/users.html"
 
-#test_login()
+test_login()
 test_register()
-#test_delete()
+test_delete()
 
 driver.quit()
