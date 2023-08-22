@@ -88,8 +88,6 @@ def test_delete():
             cells[5].find_element(By.NAME, "deleteButton").click()
             break
         
-#---------------------------------------------------------
-
 driver = webdriver.Firefox()
 
 url_login = "http://0.0.0.0:8000/login.html"
