@@ -1,38 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.alert import Alert
-import time
-
-def test_login():
-    username = "user"
-    password = "User12345"
-    
-    driver.get(url_login)
-    
-    driver.find_element(By.XPATH, "//input[@name='username']").send_keys(username)
-    driver.find_element(By.XPATH, "//input[@name='password']").send_keys(password)
-
-    driver.find_element(By.XPATH, "//input[@id='loginButton']").click()
-
-    time.sleep(2)
-
-    title = driver.title
-    expected_title = "Users List"
-    assert title == expected_title
-
-    # Logout the user
-    driver.find_element(By.ID, "logoutButton").click()
-
-    # Negotiate the pop-up alert
-    alert_login_success = Alert(driver)
-    alert_login_success.accept()
-
-    time.sleep(0.5)
-    
-    # Check if we are back at login page
-    title = driver.title
-    expected_title = "Login Page"
-    assert title == expected_title
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def test_register():
     username = "user"
@@ -55,15 +25,42 @@ def test_register():
 
     driver.find_element(By.XPATH, "//input[@type='submit']").click()
     
-    time.sleep(0.5)
-    
     # Negotiate the pop-up alert
-    alert_register_success = Alert(driver)
+    alert_register_success = wait.until(EC.alert_is_present())
     alert_register_success.accept()
 
-    time.sleep(0.5)
-
     # Check if correctly redirected to login
+    wait.until(lambda driver: driver.current_url == "http://0.0.0.0:8000/login.html")
+    title = driver.title
+    expected_title = "Login Page"
+    assert title == expected_title
+
+def test_login():
+    username = "user"
+    password = "User12345"
+    
+    driver.get(url_login)
+    
+    driver.find_element(By.XPATH, "//input[@name='username']").send_keys(username)
+    driver.find_element(By.XPATH, "//input[@name='password']").send_keys(password)
+
+    driver.find_element(By.XPATH, "//input[@id='loginButton']").click()
+
+    # Check if correctly redirected to users
+    wait.until(lambda driver: driver.current_url == "http://0.0.0.0:8000/users.html")
+    title = driver.title
+    expected_title = "Users List"
+    assert title == expected_title
+
+    # Logout the user
+    driver.find_element(By.ID, "logoutButton").click()
+
+    # Negotiate the pop-up alert
+    alert_logout_success = wait.until(EC.alert_is_present())
+    alert_logout_success.accept()
+    
+    # Check if we are back at login page
+    wait.until(lambda driver: driver.current_url == "http://0.0.0.0:8000/login.html")
     title = driver.title
     expected_title = "Login Page"
     assert title == expected_title
@@ -81,22 +78,19 @@ def test_update():
     # First logout if logged in - api does not let updating an online user
     driver.find_element(By.ID, "logoutButton").click()
 
-    alert = Alert(driver)
-    alert.accept()
-
-    time.sleep(2)
+    # Negotiate the pop-up alert
+    alert_logout_success = wait.until(EC.alert_is_present())
+    alert_logout_success.accept()
 
     # Go back to users page if we log out 
     page = driver.title
     if page == "Login Page":
         driver.find_element(By.ID, "goToUsers").click()
-        time.sleeop(0.5)
+        wait.until(lambda driver: driver.current_url == "http://0.0.0.0:8000/users.html")
     
     # Find the user to update
     user_elements = find_user_row_element(username_to_change)
     user_elements[5].find_element(By.NAME, "updateButton").click()
-    
-    time.sleep(0.5)
 
     # Enter new user info
     driver.find_element(By.ID, "newUsername").send_keys(new_username)
@@ -107,12 +101,11 @@ def test_update():
     driver.find_element(By.XPATH, "//input[@type='submit']").click()
 
     # Negotiate popup
-    alert_update_success = Alert(driver)
+    alert_update_success = wait.until(EC.alert_is_present())
     alert_update_success.accept()
 
-    time.sleep(0.5)
-
     # Check if correctly directed to users
+    wait.until(lambda driver: driver.current_url == "http://0.0.0.0:8000/users.html")
     title = driver.title
     expected_title = "Users List"
     assert title == expected_title
@@ -131,7 +124,7 @@ def test_delete():
     user_elements[5].find_element(By.NAME, "deleteButton").click()
 
     # Negotiate popup alert
-    alert_delete_success = Alert(driver)
+    alert_delete_success = wait.until(EC.alert_is_present())
     alert_delete_success.accept()
 
 def find_user_row_element(username):
@@ -143,7 +136,11 @@ def find_user_row_element(username):
         if cell_username == username:
             return cells
 
+# Set driver preferences
 driver = webdriver.Firefox()
+#driver.manage().window().maximize()
+driver.implicitly_wait(10)
+wait = WebDriverWait(driver, 10)
 
 url_login       = "http://0.0.0.0:8000/login.html"
 url_register    = "http://0.0.0.0:8000/register.html"
