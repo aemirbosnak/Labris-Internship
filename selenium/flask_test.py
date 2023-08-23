@@ -138,7 +138,7 @@ def find_user_row_element(username):
 
 # Set driver preferences
 driver = webdriver.Firefox()
-#driver.manage().window().maximize()
+driver.maximize_window()
 driver.implicitly_wait(10)
 wait = WebDriverWait(driver, 10)
 
