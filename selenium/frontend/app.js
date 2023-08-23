@@ -68,6 +68,9 @@ $(document).ready(function() {
                         alert(response.message);
                         window.location.href = "login.html";
                     },
+                    400: function(response) {
+                        alert(response.error);
+                    },
                     401: function(response) {
                         alert(response.error);
                     },
@@ -94,17 +97,9 @@ $(document).ready(function() {
                 `);
             });
         });
-
-        $("#usersButton").click(function() {
-            window.location.href = "users.html";
-        });
     }
 
     if (window.location.pathname.includes("login.html")) {
-        $("#goToRegister").click(function() {
-            window.location.href = "register.html";
-        });
-
         $("#loginForm").submit(function (event) {
             event.preventDefault();
 
@@ -138,11 +133,9 @@ $(document).ready(function() {
             window.location.href = "login.html";
         });
 
-        // Registration form submission handling
         $("#registrationForm").submit(function (event) {
             event.preventDefault();
 
-            // Gather registration form data
             const username = $("#username").val();
             const first_name = $("#firstname").val();
             const last_name = $("#lastname").val();
@@ -157,7 +150,6 @@ $(document).ready(function() {
                 password: password
             });
 
-            // Make AJAX request to Flask API for registration
             $.ajax({
                 type: "POST",
                 url: "http://localhost:5000/user/create", // Replace with actual URL
